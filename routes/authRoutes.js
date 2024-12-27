@@ -12,6 +12,8 @@ const { GetColony } = require('../controllers/ColonyController');
 const { uploadFile, upload } = require('../controllers/fileUploadController');
 const { getMaxHouseNumber } = require('../controllers/HouseController'); // Added HouseController
 
+const { GetOwnerDetails } = require('../controllers/dataController');
+
 const authenticateToken = require('../middlewares/authMiddleware');
 
 
@@ -29,6 +31,11 @@ router.post('/Locality', authenticateToken,GetLocality);
 router.get('/Colony', authenticateToken,GetColony);
 router.post('/upload', authenticateToken,upload.single('file'), uploadFile);
 router.post('/getMaxHouseNumber', authenticateToken,getMaxHouseNumber); 
+
+
+router.post('/data', GetOwnerDetails);
+
+
 
 
 
