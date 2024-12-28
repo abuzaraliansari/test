@@ -11,7 +11,22 @@ const GetOwnerDetails = async (req, res) => {
     const ownerResult = await pool.request()
       .input("MobileNumber", sql.VarChar(15), MobileNumber)
       .query(`
-        SELECT [OwnerID], [FirstName], [LastName], [MobileNumber]
+        SELECT [OwnerID]
+      ,[FirstName]
+      ,[MiddleName]
+      ,[LastName]
+      ,[MobileNumber]
+      ,[Occupation]
+      ,[Age]
+      ,[Gender]
+      ,[Income]
+      ,[Religion]
+      ,[Category]
+      ,[Cast]
+      ,[AdharNumber]
+      ,[PanNumber]
+      ,[Email]
+      ,[NumberOfMembers]
         FROM [dbo].[PropertyOwner]
         WHERE MobileNumber = @MobileNumber
           
@@ -28,28 +43,65 @@ console.log(ownerResult.recordset[0]);
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
-          SELECT [FamilyMemberID], [FirstName], [LastName], [Age], [Gender], [Occupation]
+          SELECT [FamilyMemberID]
+      ,[OwnerID]
+      ,[FirstName]
+      ,[LastName]
+      ,[Age]
+      ,[Gender]
+      ,[Occupation]
           FROM [dbo].[FamilyMember]
           WHERE OwnerID = @OwnerID 
         `),
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
-          SELECT [PropertyID], [PropertyMode], [PropertyAge], [RoomCount], [FloorCount], [Colony], [HouseNumber]
+          SELECT [PropertyID]
+      ,[OwnerID]
+      ,[PropertyMode]
+      ,[PropertyAge]
+      ,[RoomCount]
+      ,[FloorCount]
+      ,[ShopCount]
+      ,[TenantCount]
+      ,[WaterHarvesting]
+      ,[Submersible]
+      ,[ZoneID]
+      ,[Locality]
+      ,[Colony]
+      ,[GalliNumber]
+      ,[HouseNumber]
+      ,[HouseType]
+      ,[OpenArea]
+      ,[ConstructedArea]
+      ,[BankAccountNumber]
+      ,[Consent]
           FROM [dbo].[Property]
           WHERE OwnerID = @OwnerID 
         `),
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
-          SELECT [ConsiderationID], [ConsiderationType], [Description], [GeoLocation]
+          SELECT [ConsiderationID]
+      ,[OwnerID]
+      ,[PropertyID]
+      ,[ConsiderationType]
+      ,[Description]
+      ,[CreatedBy]
+      ,[GeoLocation]
           FROM [dbo].[SpecialConsideration]
           WHERE OwnerID = @OwnerID 
         `),
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
-          SELECT [FileID], [OriginalName], [FileName], [FilePath], [FileSize]
+          SELECT[FileID]
+      ,[OwnerID]
+      ,[PropertyID]
+      ,[OriginalName]
+      ,[FileName]
+      ,[FilePath]
+      ,[FileSize]
           FROM [dbo].[FileMetadata]
           WHERE OwnerID = @OwnerID 
         `)

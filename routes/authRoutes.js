@@ -13,6 +13,7 @@ const { uploadFile, upload } = require('../controllers/fileUploadController');
 const { getMaxHouseNumber } = require('../controllers/HouseController'); // Added HouseController
 
 const { GetOwnerDetails } = require('../controllers/dataController');
+const { UpdateIsActive } = require('../controllers/submitteController');
 
 const authenticateToken = require('../middlewares/authMiddleware');
 
@@ -34,6 +35,7 @@ router.post('/getMaxHouseNumber', authenticateToken,getMaxHouseNumber);
 
 
 router.post('/data', GetOwnerDetails);
+router.post('/update', UpdateIsActive);
 
 
 
