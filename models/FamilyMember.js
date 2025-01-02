@@ -1,6 +1,7 @@
 class FamilyMember {
-    constructor(FirstName, LastName, age, gender, occupation, createdBy) {
+    constructor(Relation, FirstName, LastName, age, gender, occupation, createdBy) {
         this.ownerId = ownerId;
+        this.Relation = Relation;
         this.FirstName = LastName;
         this.LastName = LastName;
         this.age = age;

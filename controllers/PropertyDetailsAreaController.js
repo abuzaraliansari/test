@@ -21,11 +21,12 @@ const addPropertyDetails1 = async (req, res) => {
 
                 // update from ZONe, and all
                 const result = await pool.request()
-                    .input('Colony', sql.NVarChar, PropertyDetails.colony)
+                    .input('ZoneID', sql.NVarChar, PropertyDetails.zone)
+                    .input('GalliNumber', sql.NVarChar, PropertyDetails.galliNumber)
                     .query(`
                         SELECT MAX(HouseNumber) AS TopHouseNumber
                         FROM Property
-                        WHERE Colony = @Colony
+                        WHERE ZoneID = @ZoneID and GalliNumber = @GalliNumber
                     `);
                   console.log('called'); 
                 

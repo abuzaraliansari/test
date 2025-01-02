@@ -10,10 +10,17 @@ const { addSpecialConsideration } = require('../controllers/SpecialConsideration
 const { GetLocality } = require('../controllers/localityController');
 const { GetColony } = require('../controllers/ColonyController');
 const { uploadFile, upload } = require('../controllers/fileUploadController');
+const { uploadDoc, Upload } = require('../controllers/DocumentUploadController');
 const { getMaxHouseNumber } = require('../controllers/HouseController'); // Added HouseController
 
 const { GetOwnerDetails } = require('../controllers/dataController');
 const { UpdateIsActive } = require('../controllers/submitteController');
+
+const { updateFamilyMember } = require('../controllers/updateFamilyController');
+const { updateOwner } = require('../controllers/updateOwnerController');
+const { updatePropertyDetails } = require('../controllers/updatePropertyDetailsAreaController');
+const  updatePropertyDetailsHouse  = require('../controllers/updatePropertyDetailsHouseController');
+const { updateSpecialConsideration } = require('../controllers/updateSpecialConsiderationController');
 
 const authenticateToken = require('../middlewares/authMiddleware');
 
@@ -31,11 +38,18 @@ router.post('/SpecialConsideration', authenticateToken,addSpecialConsideration);
 router.post('/Locality', authenticateToken,GetLocality);
 router.get('/Colony', authenticateToken,GetColony);
 router.post('/upload', authenticateToken,upload.single('file'), uploadFile);
+router.post('/uploadDoc', authenticateToken,Upload.single('file'), uploadDoc);
 router.post('/getMaxHouseNumber', authenticateToken,getMaxHouseNumber); 
 
 
 router.post('/data', GetOwnerDetails);
 router.post('/update', UpdateIsActive);
+
+router.post('/updateFamilyMember', updateFamilyMember);
+router.post('/updateOwner', updateOwner);
+router.post('/updatePropertyDetails', updatePropertyDetails);
+router.post('/updatePropertyDetailsHouse', updatePropertyDetailsHouse);
+router.post('/updateSpecialConsideration', updateSpecialConsideration);
 
 
 

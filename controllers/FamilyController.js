@@ -20,6 +20,7 @@ const addfamilyMember = async (req, res) => {
     
                 await pool.request()
                     .input('ownerID', sql.Int, familyMember.ownerID)
+                    .input('Relation', sql.NVarChar, familyMember.Relation)
                     .input('FirstName', sql.NVarChar, familyMember.FirstName)
                     .input('LastName', sql.NVarChar, familyMember.LastName)
                     .input('age', sql.NVarChar, familyMember.age)
@@ -28,8 +29,8 @@ const addfamilyMember = async (req, res) => {
                     .input('createdBy', sql.NVarChar, familyMember.createdBy)
                     .input('IsActive', sql.NVarChar, familyMember.IsActive)
                     .query(`
-                        INSERT INTO FamilyMember (OwnerID, FirstName, LastName, Age, Gender, Occupation, CreatedBy, IsActive)
-                        VALUES (@ownerID, @FirstName, @LastName, @age, @gender, @occupation, @createdBy,@IsActive)
+                        INSERT INTO FamilyMember (OwnerID, Relation, FirstName, LastName, Age, Gender, Occupation, CreatedBy, IsActive)
+                        VALUES (@ownerID, @Relation, @FirstName, @LastName, @age, @gender, @occupation, @createdBy,@IsActive)
                     `);
           
 

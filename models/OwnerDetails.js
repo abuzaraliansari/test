@@ -1,8 +1,9 @@
 class OwnerDetails {
-    constructor(firstName, middleName, lastName, mobileNumber, occupation, age, gender, income, religion, category, createdBy, Email, PanNumber, AdharNumber, NumberOfMembers, Cast, IsActive) {
+    constructor(firstName, middleName, lastName, FatherName, mobileNumber, occupation, age, gender, income, religion, category, createdBy, Email, PanNumber, AdharNumber, NumberOfMembers, Cast, IsActive) {
         this.firstName = firstName;
         this.middleName = middleName;
         this.lastName = lastName;
+        this.FatherName = FatherName;
         this.mobileNumber = mobileNumber;
         this.occupation = occupation;
         this.age = age;

@@ -9,6 +9,7 @@ const PropertyDetailsHouse = {
     floorCount,
     shopCount,
     tenantCount,
+    TenantYearlyRent,
     waterHarvesting,
     submersible,
     houseNumber,
@@ -31,6 +32,7 @@ const PropertyDetailsHouse = {
         .input('FloorCount', sql.Int, floorCount)
         .input('ShopCount', sql.Int, shopCount)
         .input('TenantCount', sql.Int, tenantCount)
+        .input('TenantYearlyRent', sql.Int, TenantYearlyRent)
         .input('WaterHarvesting', sql.Bit, waterHarvesting)
         .input('Submersible', sql.Bit, submersible)
         .input('HouseType', sql.NVarChar, HouseType)
@@ -50,6 +52,7 @@ const PropertyDetailsHouse = {
             FloorCount = @FloorCount,
             ShopCount = @ShopCount,
             TenantCount = @TenantCount,
+            TenantYearlyRent = @TenantYearlyRent,
             WaterHarvesting = @WaterHarvesting,
             Submersible = @Submersible,
         
