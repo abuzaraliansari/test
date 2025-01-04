@@ -38,7 +38,7 @@ router.post('/SpecialConsideration', authenticateToken,addSpecialConsideration);
 router.post('/Locality', authenticateToken,GetLocality);
 router.get('/Colony', authenticateToken,GetColony);
 router.post('/upload', authenticateToken,upload.single('file'), uploadFile);
-router.post('/uploadDoc', authenticateToken,Upload.single('file'), uploadDoc);
+router.post('/uploadDoc',authenticateToken,Upload.array('file'), uploadDoc);
 router.post('/getMaxHouseNumber', authenticateToken,getMaxHouseNumber); 
 
 

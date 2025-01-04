@@ -66,7 +66,8 @@ const PropertyDetailsHouse = {
           WHERE PropertyID = @PropertyID;
         `);
 
-      return result.rowsAffected[0]; // Return the number of rows affected
+      return result.rowsAffected[0];
+       // Return the number of rows affected
     } catch (error) {
       console.error('Error in updatePropertyDetails:', error);
       throw error;

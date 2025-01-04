@@ -13,6 +13,7 @@ const PropertyDetailsHouseController = {
         floorCount,
         shopCount,
         tenantCount,
+        TenantYearlyRent,
         waterHarvesting,
         submersible,
         houseNumber,
@@ -41,9 +42,9 @@ const PropertyDetailsHouseController = {
         floorCount,
         shopCount,
         tenantCount,
+        TenantYearlyRent,
         waterHarvesting,
         submersible,
-       
         houseNumber,
         bankAccountNumber,
         consent,

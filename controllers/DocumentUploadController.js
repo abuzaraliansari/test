@@ -1,6 +1,7 @@
 const multer = require('multer');
-const fileService = require('../models/fileService');
 const { sql, poolPromise } = require('../config/db');
+const DocumentService = require('../models/DocumentService');
+const path = require('path');
 
 // Multer configuration
 const storage = multer.diskStorage({
@@ -14,48 +15,64 @@ const storage = multer.diskStorage({
 
 const Upload = multer({ storage });
 
-// Controller for handling file upload
+// Controller for handling multiple tenants' data
 const uploadDoc = async (req, res) => {
-    const { ownerID, propertyID, tenantID, tenantName, createdBy } = req.body;
+    const { ownerID, propertyID, createdBy, tenantDetails } = req.body;
 
     try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        // Parse tenantDetails as JSON if it's sent as a string
+        const tenants = typeof tenantDetails === 'string' ? JSON.parse(tenantDetails) : tenantDetails;
+
+        if (!tenants || tenants.length === 0) {
+            return res.status(400).json({ success: false, message: 'No tenant details provided' });
         }
 
-        // Process the uploaded file using the service
-        const fileInfo = await fileService.processFile(req.file);
-
-        // Save file metadata to the database
         const pool = await poolPromise;
-        const result = await pool.request()
-            .input('originalName', sql.NVarChar, fileInfo.originalName)
-            .input('fileName', sql.NVarChar, fileInfo.fileName)
-            .input('filePath', sql.NVarChar, fileInfo.filePath)
-            .input('fileSize', sql.Int, fileInfo.size)
-            .input('ownerID', sql.Int, ownerID)
-            .input('propertyID', sql.Int, propertyID)
-            .input('tenantName', sql.NVarChar, tenantName)
-            .input('createdBy', sql.NVarChar, createdBy)
-            .input('createdAt', sql.DateTime, new Date()) // Adding the CreatedAt timestamp
-            .input('modifiedBy', sql.NVarChar, null)
-            .input('dateModified', sql.DateTime, null)
-            .query(`
-                INSERT INTO Tenant (
-                    OwnerID, PropertyID, TenantName, DocumentName, DocumentPath, DocumentSize, CreatedAt, CreatedBy,ModifiedBy,DateModified
-                )
-                OUTPUT INSERTED.DocumentID
-                VALUES (
-                    @ownerID, @propertyID, @tenantName, @originalName, @filePath, @fileSize, @createdAt, @createdBy, @modifiedBy, @dateModified
-                )
-            `);
 
-        const documentID = result.recordset[0]?.DocumentID;
+        for (const tenant of tenants) {
+            const { name, document } = tenant;
+
+            if (!name || !document) {
+                return res.status(400).json({ success: false, message: 'Tenant name or document missing' });
+            }
+
+            // Extract file details
+            const documentName = document.documentName;
+            const documentSize = document.documentSize;
+            const documentPath = document.documentPath;
+            const documentType = document.documentType;
+
+            // Validate file size (example: ensure file size is less than 20 MB)
+            if (documentSize > 20 * 1024 * 1024) {
+                return res.status(400).json({ success: false, message: 'File size exceeds the allowed limit of 20 MB' });
+            }
+
+            // Save tenant details and document metadata into the database
+            await pool.request()
+                .input('originalName', sql.NVarChar, documentName)
+                .input('filePath', sql.NVarChar, documentPath)
+                .input('fileSize', sql.Int, documentSize)
+                .input('documentType', sql.NVarChar, documentType)
+                .input('ownerID', sql.Int, ownerID)
+                .input('propertyID', sql.Int, propertyID)
+                .input('tenantName', sql.NVarChar, name)
+                .input('createdBy', sql.NVarChar, createdBy)
+                .input('createdAt', sql.DateTime, new Date())
+                .input('modifiedBy', sql.NVarChar, null)
+                .input('dateModified', sql.DateTime, null)
+                .query(`
+                    INSERT INTO TenantDocuments (
+                        OwnerID, PropertyID, TenantName, DocumentName, DocumentPath, DocumentSize, DocumentType, CreatedAt, CreatedBy, ModifiedBy, DateModified
+                    )
+                    VALUES (
+                        @ownerID, @propertyID, @tenantName, @originalName, @filePath, @fileSize, @documentType, @createdAt, @createdBy, @modifiedBy, @dateModified
+                    )
+                `);
+        }
 
         res.status(201).json({
             success: true,
-            message: 'File uploaded and details stored successfully',
-            documentID: documentID,
+            message: 'All tenant details and documents stored successfully',
         });
     } catch (err) {
         console.error(err);
