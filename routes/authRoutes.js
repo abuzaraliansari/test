@@ -9,8 +9,14 @@ const PropertyDetailsHouseController = require('../controllers/PropertyDetailsHo
 const { addSpecialConsideration } = require('../controllers/SpecialConsiderationController');
 const { GetLocality } = require('../controllers/localityController');
 const { GetColony } = require('../controllers/ColonyController');
-const { uploadFile, upload } = require('../controllers/fileUploadController');
-const { uploadDoc, Upload } = require('../controllers/DocumentUploadController');
+// const { uploadFile, upload } = require('../controllers/fileUploadController');
+// const { uploadDoc, Upload } = require('../controllers/DocumentUploadController');
+
+//const { uploadFile, uploadDoc, upload } = require('../controllers/test'); // Added test controller
+
+const { uploadFileMetadata, uploadTenantDocuments, upload } = require('../controllers/FileUpload'); // Added FileUpload controller
+
+
 const { getMaxHouseNumber } = require('../controllers/HouseController'); // Added HouseController
 
 const { GetOwnerDetails } = require('../controllers/dataController');
@@ -37,8 +43,14 @@ router.post('/PropertyDetailsHouse', authenticateToken,PropertyDetailsHouseContr
 router.post('/SpecialConsideration', authenticateToken,addSpecialConsideration);
 router.post('/Locality', authenticateToken,GetLocality);
 router.get('/Colony', authenticateToken,GetColony);
-router.post('/upload', authenticateToken,upload.single('file'), uploadFile);
-router.post('/uploadDoc',authenticateToken,Upload.array('file'), uploadDoc);
+//router.post('/upload', upload.array('file'), uploadFile);
+//router.post('/uploadDoc',Upload.array('file'), uploadDoc);
+//router.post('/upload', upload.array('file'), uploadFile);
+//router.post('/uploadDoc', upload.array('file'), uploadDoc);
+
+router.post('/uploadFileMetadata', upload.array('files'), uploadFileMetadata);
+router.post('/uploadTenantDocuments', upload.array('files'), uploadTenantDocuments);
+
 router.post('/getMaxHouseNumber', authenticateToken,getMaxHouseNumber); 
 
 

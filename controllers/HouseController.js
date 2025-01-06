@@ -4,22 +4,19 @@ const { sql, poolPromise } = require('../config/db');
 const getMaxHouseNumber = async (req, res) => {
     try {
         console.log(req.body);
-        const { colonyName } = req.body;
+        const { zone, galliNumber } = req.body;
        
         const pool = await poolPromise;
 
-        // Query to get the maximum house number for the selected colony
+        // Query to get the maximum house number for the selected zone and galli number
         const result = await pool.request()
-            .input('Colony', sql.NVarChar, colonyName)
+            .input('ZoneID', sql.Int, zone)
+            .input('GalliNumber', sql.NVarChar, galliNumber)
             .query(`
                 SELECT MAX(HouseNumber) AS TopHouseNumber
                 FROM Property
-                WHERE Colony = @Colony
+                WHERE ZoneID = @ZoneID and GalliNumber = @GalliNumber
             `);
-
-        if (result.recordset.length === 0 || result.recordset[0].TopHouseNumber === null) {
-            return res.status(404).json({ success: false, message: 'No house numbers found for this colony.' });
-        }
 
         const topHouseNumber = result.recordset[0].TopHouseNumber; // Get the highest number
         const newHouseNumber = topHouseNumber + 1; // Increment the house number
