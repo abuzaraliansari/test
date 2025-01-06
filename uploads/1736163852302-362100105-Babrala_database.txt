@@ -1,0 +1,415 @@
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[AgentLogin]    Script Date: 12/21/2024 3:09:05 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[AgentLogin](
+	[AgentID] [int] IDENTITY(1,1) NOT NULL,
+	[Username] [nvarchar](50) NOT NULL,
+	[PasswordHash] [nvarchar](255) NOT NULL,
+	[FullName] [nvarchar](100) NULL,
+	[Email] [nvarchar](100) NULL,
+	[MobileNumber] [varchar](15) NULL,
+	[LastLogin] [datetime] NULL,
+	[CreatedBy] [nvarchar](50) NOT NULL,
+	[DateCreated] [datetime] NULL,
+	[ModifiedBy] [nvarchar](50) NULL,
+	[DateModified] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[AgentID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[MobileNumber] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[Username] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[AgentLogin] ADD  DEFAULT (getdate()) FOR [DateCreated]
+GO
+
+
+
+
+
+
+--------------------------------------------------------------------------------------
+
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[Colony]    Script Date: 12/21/2024 3:11:21 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Colony](
+	[ColonyID] [int] IDENTITY(1,1) NOT NULL,
+	[Colony] [nvarchar](255) NOT NULL,
+	[LocalityID] [int] NOT NULL,
+	[Locality] [nvarchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ColonyID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Colony]  WITH CHECK ADD  CONSTRAINT [FK_Colony_LocalityID] FOREIGN KEY([LocalityID])
+REFERENCES [dbo].[Locality] ([LocalityID])
+GO
+
+ALTER TABLE [dbo].[Colony] CHECK CONSTRAINT [FK_Colony_LocalityID]
+GO
+
+
+
+
+--------------------------------------------------------------------------------------------------------------
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[FamilyMember]    Script Date: 12/21/2024 3:11:46 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[FamilyMember](
+	[FamilyMemberID] [int] IDENTITY(1,1) NOT NULL,
+	[OwnerID] [int] NULL,
+	[Name] [nvarchar](100) NOT NULL,
+	[Age] [nvarchar](50) NOT NULL,
+	[Gender] [char](1) NULL,
+	[Occupation] [nvarchar](100) NULL,
+	[CreatedBy] [nvarchar](50) NOT NULL,
+	[DateCreated] [datetime] NULL,
+	[ModifiedBy] [nvarchar](50) NULL,
+	[DateModified] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[FamilyMemberID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[FamilyMember] ADD  DEFAULT (getdate()) FOR [DateCreated]
+GO
+
+ALTER TABLE [dbo].[FamilyMember]  WITH CHECK ADD FOREIGN KEY([OwnerID])
+REFERENCES [dbo].[PropertyOwner] ([OwnerID])
+GO
+
+ALTER TABLE [dbo].[FamilyMember]  WITH CHECK ADD CHECK  (([Gender]='O' OR [Gender]='F' OR [Gender]='M'))
+GO
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[FileMetadata]    Script Date: 12/21/2024 3:12:46 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[FileMetadata](
+	[FileID] [int] IDENTITY(1,1) NOT NULL,
+	[OriginalName] [nvarchar](255) NULL,
+	[FileName] [nvarchar](255) NULL,
+	[FilePath] [nvarchar](500) NULL,
+	[FileSize] [int] NULL,
+	[CreatedAt] [datetime] NULL,
+	[OwnerID] [int] NULL,
+	[PropertyID] [int] NULL,
+	[CreatedBy] [nvarchar](100) NULL,
+	[ModifiedBy] [nvarchar](100) NULL,
+	[DateModified] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[FileID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[FileMetadata] ADD  DEFAULT (getdate()) FOR [CreatedAt]
+GO
+
+ALTER TABLE [dbo].[FileMetadata]  WITH CHECK ADD FOREIGN KEY([OwnerID])
+REFERENCES [dbo].[PropertyOwner] ([OwnerID])
+GO
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[Locality]    Script Date: 12/21/2024 3:13:08 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Locality](
+	[LocalityID] [int] IDENTITY(1,1) NOT NULL,
+	[Locality] [nvarchar](255) NOT NULL,
+	[ZoneID] [int] NOT NULL,
+	[Zone] [nvarchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LocalityID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+-------------------------------------------------------------------------------------------------------
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[Photos]    Script Date: 12/21/2024 3:14:01 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Photos](
+	[PhotoID] [int] IDENTITY(1,1) NOT NULL,
+	[PhotoPath] [nvarchar](255) NOT NULL,
+	[OwnerID] [int] NOT NULL,
+	[CreatedBy] [nvarchar](100) NOT NULL,
+	[DateCreated] [datetime] NOT NULL,
+	[ModifiedBy] [nvarchar](100) NULL,
+	[DateModified] [datetime] NULL,
+	[CreatedAt] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[PhotoID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Photos] ADD  DEFAULT (getdate()) FOR [DateCreated]
+GO
+
+ALTER TABLE [dbo].[Photos] ADD  DEFAULT (getdate()) FOR [CreatedAt]
+GO
+
+ALTER TABLE [dbo].[Photos]  WITH CHECK ADD  CONSTRAINT [FK_Photos_OwnerID] FOREIGN KEY([OwnerID])
+REFERENCES [dbo].[PropertyOwner] ([OwnerID])
+GO
+
+ALTER TABLE [dbo].[Photos] CHECK CONSTRAINT [FK_Photos_OwnerID]
+GO
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[Property]    Script Date: 12/21/2024 3:14:33 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Property](
+	[PropertyID] [int] IDENTITY(1,1) NOT NULL,
+	[OwnerID] [int] NULL,
+	[PropertyMode] [nvarchar](20) NULL,
+	[PropertyAge] [nvarchar](50) NULL,
+	[RoomCount] [int] NULL,
+	[FloorCount] [int] NULL,
+	[ShopCount] [int] NULL,
+	[TenantCount] [int] NULL,
+	[WaterHarvesting] [bit] NULL,
+	[Submersible] [bit] NULL,
+	[GeoLocation] [nvarchar](100) NULL,
+	[Locality] [int] NULL,
+	[HouseNumber] [int] NULL,
+	[GalliNumber] [nvarchar](20) NULL,
+	[BankAccountNumber] [varchar](20) NULL,
+	[Consent] [bit] NULL,
+	[CreatedBy] [nvarchar](50) NULL,
+	[DateCreated] [datetime] NULL,
+	[ModifiedBy] [nvarchar](50) NULL,
+	[DateModified] [datetime] NULL,
+	[ZoneID] [int] NULL,
+	[Colony] [nvarchar](100) NULL
+) ON [PRIMARY]
+GO
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[PropertyOwner]    Script Date: 12/21/2024 3:14:59 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[PropertyOwner](
+	[OwnerID] [int] IDENTITY(1,1) NOT NULL,
+	[FirstName] [nvarchar](50) NOT NULL,
+	[MiddleName] [nvarchar](50) NULL,
+	[LastName] [nvarchar](50) NOT NULL,
+	[MobileNumber] [varchar](15) NOT NULL,
+	[Occupation] [nvarchar](100) NULL,
+	[Age] [nvarchar](50) NOT NULL,
+	[Gender] [char](1) NULL,
+	[Income] [nvarchar](100) NULL,
+	[Religion] [nvarchar](50) NULL,
+	[Category] [nvarchar](50) NULL,
+	[CreatedBy] [nvarchar](50) NOT NULL,
+	[DateCreated] [datetime] NULL,
+	[ModifiedBy] [nvarchar](50) NULL,
+	[DateModified] [datetime] NULL,
+	[CreatedAt] [datetime] NULL,
+	[Email] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[OwnerID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[MobileNumber] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[PropertyOwner] ADD  DEFAULT (getdate()) FOR [DateCreated]
+GO
+
+ALTER TABLE [dbo].[PropertyOwner] ADD  DEFAULT (getdate()) FOR [CreatedAt]
+GO
+
+ALTER TABLE [dbo].[PropertyOwner]  WITH CHECK ADD CHECK  (([Gender]='O' OR [Gender]='F' OR [Gender]='M'))
+GO
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  Table [dbo].[SpecialConsideration]    Script Date: 12/21/2024 3:15:34 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[SpecialConsideration](
+	[ConsiderationID] [int] IDENTITY(1,1) NOT NULL,
+	[OwnerID] [int] NULL,
+	[ConsiderationType] [nvarchar](50) NULL,
+	[Description] [nvarchar](255) NULL,
+	[CreatedBy] [nvarchar](50) NOT NULL,
+	[DateCreated] [datetime] NULL,
+	[ModifiedBy] [nvarchar](50) NULL,
+	[DateModified] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ConsiderationID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[SpecialConsideration] ADD  DEFAULT (getdate()) FOR [DateCreated]
+GO
+
+ALTER TABLE [dbo].[SpecialConsideration]  WITH CHECK ADD FOREIGN KEY([OwnerID])
+REFERENCES [dbo].[PropertyOwner] ([OwnerID])
+GO
+
+ALTER TABLE [dbo].[SpecialConsideration]  WITH CHECK ADD CHECK  (([ConsiderationType]='Widow' OR [ConsiderationType]='Handicapped' OR [ConsiderationType]='Armed Forces' OR [ConsiderationType]='Freedom Fighter' OR [ConsiderationType]='Senior Citizen'))
+GO
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+USE [PropertyManagementDB]
+GO
+
+/****** Object:  StoredProcedure [dbo].[GetNextHouseNumberInColony]    Script Date: 12/21/2024 3:17:47 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[GetNextHouseNumberInColony]
+    @Colony NVARCHAR(100)
+AS
+BEGIN
+    DECLARE @NewHouseNumber NVARCHAR(20);
+
+    -- Find the top 1 house number in the specified colony and increment it by 1
+    SELECT TOP 1 @NewHouseNumber = HouseNumber + 1
+    FROM Property
+    WHERE Colony = @Colony
+    ORDER BY HouseNumber DESC;
+
+    -- If no house number exists, set to 1
+    IF @NewHouseNumber IS NULL
+    BEGIN
+        SET @NewHouseNumber = 'H-1';
+    END
+
+    -- Return the new house number
+    SELECT @NewHouseNumber AS HouseNumber;
+END;
+GO
+
+
