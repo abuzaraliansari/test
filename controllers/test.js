@@ -1,121 +1,130 @@
-const multer = require('multer');
 const { sql, poolPromise } = require('../config/db');
-const { request } = require('express');
+const { response } = require('express');
 
-// Multer configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Directory to store uploaded files
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`); // Add timestamp to the filename
-  },
-});
+const addOwnerProperty = async (req, res) => {
+    const { ownerDetails, familyMembers, propertyDetails, specialConsideration } = req.body;
 
-const upload = multer({ storage });
-
-// Controller for handling file upload
-const uploadFile = async (req, res) => {
-    console.log(req.body);
-  const { ownerID, propertyID, createdBy } = req.body;
-
-  try {
- 
-    const pool = await poolPromise;
-
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: 'No files uploaded' });
+    if (!ownerDetails) {
+        return res.status(400).json({ success: false, message: 'Owner details are required11111' });
     }
 
-    for (const file of req.files) {
-      const { originalname: originalName, filename: fileName, path: filePath, size: fileSize } = file;
+    try {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
 
-      // Save file metadata to the database
-      await pool.request()
-        .input('OwnerID', sql.Int, ownerID)
-        .input('PropertyID', sql.Int, propertyID)
-        .input('OriginalName', sql.NVarChar, originalName)
-        .input('FileName', sql.NVarChar, fileName)
-        .input('FilePath', sql.NVarChar, filePath)
-        .input('FileSize', sql.Int, fileSize)
-        .input('CreatedBy', sql.NVarChar, createdBy)
-        .input('DateCreated', sql.DateTime, new Date())
-        .query(`
-          INSERT INTO FileMetadata (
-            OwnerID, PropertyID, OriginalName, FileName, FilePath, FileSize, CreatedBy, DateCreated
-          )
-          VALUES (
-            @OwnerID, @PropertyID, @OriginalName, @FileName, @FilePath, @FileSize, @CreatedBy, @DateCreated
-          )
-        `);
+        await transaction.begin();
+
+        // Insert owner details
+        const ownerResult = await transaction.request()
+            .input('firstName', sql.NVarChar, ownerDetails.firstName)
+            .input('middleName', sql.NVarChar, ownerDetails.middleName)
+            .input('lastName', sql.NVarChar, ownerDetails.lastName)
+            .input('FatherName', sql.NVarChar, ownerDetails.FatherName)
+            .input('mobileNumber', sql.VarChar, ownerDetails.mobileNumber)
+            .input('occupation', sql.NVarChar, ownerDetails.occupation)
+            .input('age', sql.NVarChar, ownerDetails.age)
+            .input('gender', sql.Char, ownerDetails.gender)
+            .input('income', sql.NVarChar, ownerDetails.income)
+            .input('religion', sql.NVarChar, ownerDetails.religion)
+            .input('category', sql.NVarChar, ownerDetails.category)
+            .input('AdharNumber', sql.NVarChar, ownerDetails.AdharNumber)
+            .input('PanNumber', sql.NVarChar, ownerDetails.PanNumber)
+            .input('Email', sql.NVarChar, ownerDetails.Email)
+            .input('NumberOfMembers', sql.Int, parseInt(ownerDetails.NumberOfMembers))
+            .input('CreatedBy', sql.NVarChar, ownerDetails.CreatedBy)
+            .input('IsActive', sql.Bit, 1)
+            .query(`
+                INSERT INTO PropertyOwner (FirstName, MiddleName, LastName, FatherName, MobileNumber, Occupation, Age, Gender, Income, Religion, Category, AdharNumber, PanNumber, Email, NumberOfMembers, CreatedBy, IsActive)
+                OUTPUT INSERTED.OwnerID
+                VALUES (@firstName, @middleName, @lastName, @FatherName, @mobileNumber, @occupation, @age, @gender, @income, @religion, @category, @AdharNumber, @PanNumber, @Email, @NumberOfMembers, @CreatedBy, @IsActive)
+            `);
+
+        const ownerID = ownerResult.recordset[0].OwnerID;
+console.log(ownerID)
+console.log(ownerResult)
+        // Insert family members if provided
+        if (familyMembers && familyMembers.length > 0) {
+            for (const member of familyMembers) {
+                await transaction.request()
+                    .input('ownerID', sql.Int, ownerID)
+                    .input('Relation', sql.NVarChar, member.Relation)
+                    .input('FirstName', sql.NVarChar, member.FirstName)
+                    .input('LastName', sql.NVarChar, member.LastName)
+                    .input('age', sql.NVarChar, member.age)
+                    .input('gender', sql.Char, member.gender)
+                    .input('occupation', sql.NVarChar, member.occupation)
+                    .input('CreatedBy', sql.NVarChar, ownerDetails.CreatedBy)
+                    .input('IsActive', sql.Bit, 1)
+                    .query(`
+                        INSERT INTO FamilyMember (OwnerID, Relation, FirstName, LastName, Age, Gender, Occupation, CreatedBy, IsActive)
+                        VALUES (@ownerID, @Relation, @FirstName, @LastName, @age, @gender, @occupation, @CreatedBy, @IsActive)
+                    `);
+            }
+        }
+
+        // Insert property details
+        const propertyResult = await transaction.request()
+            .input('ownerID', sql.Int, ownerID)
+            .input('PropertyMode', sql.NVarChar, propertyDetails.propertyMode)
+            .input('PropertyAge', sql.NVarChar, propertyDetails.propertyAge)
+            .input('RoomCount', sql.Int, parseInt(propertyDetails.roomCount))
+            .input('FloorCount', sql.Int, parseInt(propertyDetails.floorCount))
+            .input('ShopCount', sql.Int, parseInt(propertyDetails.shopCount))
+            .input('TenantCount', sql.Int, parseInt(propertyDetails.tenantCount))
+            .input('TenantYearlyRent', sql.Int, parseInt(propertyDetails.TenantYearlyRent))
+            .input('WaterHarvesting', sql.Bit, propertyDetails.waterHarvesting === 'Yes' ? 1 : 0)
+            .input('Submersible', sql.Bit, propertyDetails.submersible === 'Yes' ? 1 : 0)
+            .input('ZoneID', sql.Int, parseInt(propertyDetails.zone))
+            .input('Locality', sql.Int, parseInt(propertyDetails.locality))
+            .input('Colony', sql.NVarChar, propertyDetails.colony)
+            .input('GalliNumber', sql.NVarChar, propertyDetails.galliNumber)
+            .input('HouseNumber', sql.Int, parseInt(propertyDetails.houseNumber))
+            .input('HouseType', sql.NVarChar, propertyDetails.HouseType)
+            .input('OpenArea', sql.NVarChar, propertyDetails.OpenArea)
+            .input('ConstructedArea', sql.NVarChar, propertyDetails.ConstructedArea)
+            .input('BankAccountNumber', sql.VarChar, propertyDetails.bankAccountNumber)
+            .input('Consent', sql.Bit, propertyDetails.consent === 'Yes' ? 1 : 0)
+            .input('CreatedBy', sql.NVarChar, propertyDetails.CreatedBy)
+            .input('IsActive', sql.Bit, 1)
+            .query(`
+                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive)
+                OUTPUT INSERTED.PropertyID
+                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive)
+            `);
+
+        const propertyID = propertyResult.recordset[0].PropertyID;
+
+        // Insert special consideration details
+        if (specialConsideration) {
+            await transaction.request()
+                .input('ownerID', sql.Int, ownerID)
+                .input('propertyID', sql.Int, propertyID)
+                .input('ConsiderationType', sql.NVarChar, specialConsideration.considerationType)
+                .input('Description', sql.NVarChar, specialConsideration.description)
+                .input('GeoLocation', sql.NVarChar, `${specialConsideration.latitude},${specialConsideration.longitude}`)
+                .input('CreatedBy', sql.NVarChar, specialConsideration.CreatedBy)
+                .input('IsActive', sql.Bit, 1)
+                .query(`
+                    INSERT INTO SpecialConsideration (OwnerID, PropertyID, ConsiderationType, Description, GeoLocation, CreatedBy, IsActive)
+                    VALUES (@ownerID, @propertyID, @ConsiderationType, @Description, @GeoLocation, @CreatedBy, @IsActive)
+                `);
+        }
+
+        await transaction.commit();
+
+        res.status(201).json({
+            success: true,
+            message: 'Property details added successfully',
+            ownerID: ownerID,
+            propertyID: propertyID
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        if (transaction) await transaction.rollback();
+        res.status(500).json({ success: false, error: error.message });
     }
-
-    res.status(201).json({
-      success: true,
-      message: 'Files uploaded successfully',
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
-};
-
-// Controller for handling tenant documents upload
-const uploadDoc = async (req, res) => {
-  const { ownerID, propertyID, createdBy, tenantDetails } = req.body;
-
-  try {
-    // Parse tenantDetails as JSON if it's sent as a string
-    const tenants = typeof tenantDetails === 'string' ? JSON.parse(tenantDetails) : tenantDetails;
-
-    if (!tenants || tenants.length === 0) {
-      return res.status(400).json({ success: false, message: 'No tenant details provided' });
-    }
-
-    const pool = await poolPromise;
-
-    for (const tenant of tenants) {
-      const { name, document } = tenant;
-
-      if (!name || !document) {
-        return res.status(400).json({ success: false, message: 'Tenant name or document missing' });
-      }
-
-      const { documentName, documentPath, documentSize, documentType } = document;
-
-      // Save tenant details and document metadata into the database
-      await pool.request()
-        .input('OwnerID', sql.Int, ownerID)
-        .input('PropertyID', sql.Int, propertyID)
-        .input('tenantName', sql.NVarChar, name)
-        .input('documentName', sql.NVarChar, documentName)
-        .input('documentPath', sql.NVarChar, documentPath)
-        .input('documentSize', sql.Int, documentSize)
-        .input('documentType', sql.NVarChar, documentType)
-        .input('CreatedBy', sql.NVarChar, createdBy)
-        .input('CreatedAt', sql.DateTime, new Date())
-        .query(`
-          INSERT INTO TenantDocuments (
-            OwnerID, PropertyID, tenantName, documentName, documentPath, documentSize, documentType, CreatedAt, CreatedBy
-          )
-          VALUES (
-            @OwnerID, @PropertyID, @tenantName, @documentName, @documentPath, @documentSize, @documentType, @CreatedAt, @CreatedBy
-          )
-        `);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'All tenant details and documents stored successfully',
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
 };
 
 module.exports = {
-  uploadFile,
-  uploadDoc,
-  upload,
+    addOwnerProperty
 };

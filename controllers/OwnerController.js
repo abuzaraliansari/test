@@ -8,6 +8,10 @@ const addOwner = async (req, res) => {
 
     console.log(req.body);
         const { ownerDetails} = req.body;
+
+        if (!ownerDetails) {
+            return res.status(400).json({ success: false, message: 'Owner details are required' });
+        }
     
     try {
       
@@ -36,12 +40,12 @@ const addOwner = async (req, res) => {
             .input('PanNumber', sql.NVarChar, stringifiedDetails.PanNumber)
             .input('AdharNumber', sql.NVarChar, stringifiedDetails.AdharNumber)
             .input('NumberOfMembers',sql.Int, parseInt(stringifiedDetails.NumberOfMembers)) 
-            .input('Cast', sql.NVarChar, stringifiedDetails.Cast)
+           // .input('Cast', sql.NVarChar, stringifiedDetails.Cast)
             .input('IsActive', sql.NVarChar, stringifiedDetails.IsActive)
             .query(`
-                INSERT INTO PropertyOwner (FirstName, MiddleName, LastName, FatherName, MobileNumber, Occupation, Age, Gender, Income, Religion, Category, CreatedBy, Email, PanNumber, AdharNumber, NumberOfMembers, Cast, IsActive)
+                INSERT INTO PropertyOwner (FirstName, MiddleName, LastName, FatherName, MobileNumber, Occupation, Age, Gender, Income, Religion, Category, CreatedBy, Email, PanNumber, AdharNumber, NumberOfMembers, IsActive)
                 OUTPUT INSERTED.OwnerID
-                VALUES (@firstName, @middleName, @lastName, @FatherName, @mobileNumber, @occupation, @age, @gender, @income, @religion, @category, @createdBy, @Email, @PanNumber, @AdharNumber, @NumberOfMembers, @Cast, @IsActive)
+                VALUES (@firstName, @middleName, @lastName, @FatherName, @mobileNumber, @occupation, @age, @gender, @income, @religion, @category, @createdBy, @Email, @PanNumber, @AdharNumber, @NumberOfMembers, @IsActive)
             `);
 
         if (ownerResult.recordset.length === 0) {

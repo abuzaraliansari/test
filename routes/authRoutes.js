@@ -12,7 +12,7 @@ const { GetColony } = require('../controllers/ColonyController');
 // const { uploadFile, upload } = require('../controllers/fileUploadController');
 // const { uploadDoc, Upload } = require('../controllers/DocumentUploadController');
 
-//const { uploadFile, uploadDoc, upload } = require('../controllers/test'); // Added test controller
+const {addOwnerProperty} = require('../controllers/test'); // Added test controller
 
 const { uploadFileMetadata, uploadTenantDocuments, upload } = require('../controllers/FileUpload'); // Added FileUpload controller
 
@@ -47,6 +47,8 @@ router.get('/Colony', authenticateToken,GetColony);
 //router.post('/uploadDoc',Upload.array('file'), uploadDoc);
 //router.post('/upload', upload.array('file'), uploadFile);
 //router.post('/uploadDoc', upload.array('file'), uploadDoc);
+
+router.post('/addOwnerProperty', addOwnerProperty);
 
 router.post('/uploadFileMetadata', upload.array('files'), uploadFileMetadata);
 router.post('/uploadTenantDocuments', upload.array('files'), uploadTenantDocuments);
