@@ -5,7 +5,7 @@ const addOwnerProperty = async (req, res) => {
     const { ownerDetails, familyMembers, propertyDetails, specialConsideration } = req.body;
 
     if (!ownerDetails) {
-        return res.status(400).json({ success: false, message: 'Owner details are required11111' });
+        return res.status(400).json({ success: false, message: 'Owner details are required' });
     }
 
     try {
@@ -119,7 +119,7 @@ console.log(ownerResult)
             propertyID: propertyID
         });
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fdff:', error);
         if (transaction) await transaction.rollback();
         res.status(500).json({ success: false, error: error.message });
     }
