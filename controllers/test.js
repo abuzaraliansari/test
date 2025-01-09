@@ -23,6 +23,7 @@ const addOwnerProperty = async (req, res) => {
             .input('mobileNumber', sql.VarChar, ownerDetails.mobileNumber)
             .input('occupation', sql.NVarChar, ownerDetails.occupation)
             .input('age', sql.NVarChar, ownerDetails.age)
+            .input('DOB', sql.NVarChar, ownerDetails.DOB)
             .input('gender', sql.Char, ownerDetails.gender)
             .input('income', sql.NVarChar, ownerDetails.income)
             .input('religion', sql.NVarChar, ownerDetails.religion)
@@ -34,9 +35,9 @@ const addOwnerProperty = async (req, res) => {
             .input('CreatedBy', sql.NVarChar, ownerDetails.CreatedBy)
             .input('IsActive', sql.Bit, 1)
             .query(`
-                INSERT INTO PropertyOwner (FirstName, MiddleName, LastName, FatherName, MobileNumber, Occupation, Age, Gender, Income, Religion, Category, AdharNumber, PanNumber, Email, NumberOfMembers, CreatedBy, IsActive)
+                INSERT INTO PropertyOwner (FirstName, MiddleName, LastName, FatherName, MobileNumber, Occupation, Age, DOB, Gender, Income, Religion, Category, AdharNumber, PanNumber, Email, NumberOfMembers, CreatedBy, IsActive)
                 OUTPUT INSERTED.OwnerID
-                VALUES (@firstName, @middleName, @lastName, @FatherName, @mobileNumber, @occupation, @age, @gender, @income, @religion, @category, @AdharNumber, @PanNumber, @Email, @NumberOfMembers, @CreatedBy, @IsActive)
+                VALUES (@firstName, @middleName, @lastName, @FatherName, @mobileNumber, @occupation, @age, @DOB, @gender, @income, @religion, @category, @AdharNumber, @PanNumber, @Email, @NumberOfMembers, @CreatedBy, @IsActive)
             `);
 
         const ownerID = ownerResult.recordset[0].OwnerID;
@@ -51,13 +52,15 @@ console.log(ownerResult)
                     .input('FirstName', sql.NVarChar, member.FirstName)
                     .input('LastName', sql.NVarChar, member.LastName)
                     .input('age', sql.NVarChar, member.age)
+                    .input('DOB', sql.NVarChar, member.DOB)
                     .input('gender', sql.Char, member.gender)
                     .input('occupation', sql.NVarChar, member.occupation)
+                    .input('Income', sql.NVarChar, member.Income)
                     .input('CreatedBy', sql.NVarChar, ownerDetails.CreatedBy)
                     .input('IsActive', sql.Bit, 1)
                     .query(`
-                        INSERT INTO FamilyMember (OwnerID, Relation, FirstName, LastName, Age, Gender, Occupation, CreatedBy, IsActive)
-                        VALUES (@ownerID, @Relation, @FirstName, @LastName, @age, @gender, @occupation, @CreatedBy, @IsActive)
+                        INSERT INTO FamilyMember (OwnerID, Relation, FirstName, LastName, Age, DOB, Gender, Occupation, Income, CreatedBy, IsActive)
+                        VALUES (@ownerID, @Relation, @FirstName, @LastName, @age, @DOB, @gender, @occupation, @Income, @CreatedBy, @IsActive)
                     `);
             }
         }
@@ -70,6 +73,7 @@ console.log(ownerResult)
             .input('RoomCount', sql.Int, parseInt(propertyDetails.roomCount))
             .input('FloorCount', sql.Int, parseInt(propertyDetails.floorCount))
             .input('ShopCount', sql.Int, parseInt(propertyDetails.shopCount))
+            .input('ShopArea', sql.NVarChar, propertyDetails.ShopArea)
             .input('TenantCount', sql.Int, parseInt(propertyDetails.tenantCount))
             .input('TenantYearlyRent', sql.Int, parseInt(propertyDetails.TenantYearlyRent))
             .input('WaterHarvesting', sql.Bit, propertyDetails.waterHarvesting === 'Yes' ? 1 : 0)
@@ -87,9 +91,9 @@ console.log(ownerResult)
             .input('CreatedBy', sql.NVarChar, propertyDetails.CreatedBy)
             .input('IsActive', sql.Bit, 1)
             .query(`
-                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive)
+                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, ShopArea, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive)
                 OUTPUT INSERTED.PropertyID
-                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive)
+                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @ShopArea, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive)
             `);
 
         const propertyID = propertyResult.recordset[0].PropertyID;
