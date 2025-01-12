@@ -8,7 +8,8 @@ const { addPropertyDetails1 } = require('../controllers/PropertyDetailsAreaContr
 const PropertyDetailsHouseController = require('../controllers/PropertyDetailsHouseController'); // Imported correctly
 const { addSpecialConsideration } = require('../controllers/SpecialConsiderationController');
 const { GetLocality } = require('../controllers/localityController');
-const { GetColony } = require('../controllers/ColonyController');
+//const { GetColony } = require('../controllers/zoneController');
+const { GetColony, AddColony } = require('../controllers/ColonyController');
 // const { uploadFile, upload } = require('../controllers/fileUploadController');
 // const { uploadDoc, Upload } = require('../controllers/DocumentUploadController');
 
@@ -42,7 +43,8 @@ router.post('/PropertyDetails1', authenticateToken,addPropertyDetails1);
 router.post('/PropertyDetailsHouse', authenticateToken,PropertyDetailsHouseController.update);
 router.post('/SpecialConsideration', authenticateToken,addSpecialConsideration);
 router.post('/Locality', authenticateToken,GetLocality);
-router.get('/Colony', authenticateToken,GetColony);
+router.post('/Colony', authenticateToken,GetColony);
+router.post('/AddColony', authenticateToken,AddColony);
 //router.post('/upload', upload.array('file'), uploadFile);
 //router.post('/uploadDoc',Upload.array('file'), uploadDoc);
 //router.post('/upload', upload.array('file'), uploadFile);
