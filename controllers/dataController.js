@@ -15,9 +15,11 @@ const GetOwnerDetails = async (req, res) => {
       ,[FirstName]
       ,[MiddleName]
       ,[LastName]
+      ,[FatherName]
       ,[MobileNumber]
       ,[Occupation]
       ,[Age]
+      ,[DOB]
       ,[Gender]
       ,[Income]
       ,[Religion]
@@ -27,6 +29,11 @@ const GetOwnerDetails = async (req, res) => {
       ,[PanNumber]
       ,[Email]
       ,[NumberOfMembers]
+      ,[CreatedBy]
+      ,[DateCreated]
+      ,[ModifiedBy]
+      ,[DateModified]
+      ,[IsActive]
         FROM [dbo].[PropertyOwner]
         WHERE MobileNumber = @MobileNumber
           
@@ -39,17 +46,25 @@ console.log(ownerResult.recordset[0]);
     const OwnerID = ownerResult.recordset[0].OwnerID;
 
     // Step 2: Fetch related data from other tables
-    const [familyMembers, properties, considerations, files] = await Promise.all([
+    const [familyMembers, properties, considerations, files, TenantDocuments] = await Promise.all([
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
           SELECT [FamilyMemberID]
       ,[OwnerID]
+      ,[Relation]
       ,[FirstName]
       ,[LastName]
       ,[Age]
+      ,[DOB]
       ,[Gender]
       ,[Occupation]
+      ,[CreatedBy]
+      ,[Income]
+      ,[DateCreated]
+      ,[ModifiedBy]
+      ,[DateModified]
+      ,[IsActive]
           FROM [dbo].[FamilyMember]
           WHERE OwnerID = @OwnerID 
         `),
@@ -63,7 +78,9 @@ console.log(ownerResult.recordset[0]);
       ,[RoomCount]
       ,[FloorCount]
       ,[ShopCount]
+      ,[ShopArea]
       ,[TenantCount]
+      ,[TenantYearlyRent]
       ,[WaterHarvesting]
       ,[Submersible]
       ,[ZoneID]
@@ -76,33 +93,66 @@ console.log(ownerResult.recordset[0]);
       ,[ConstructedArea]
       ,[BankAccountNumber]
       ,[Consent]
+      ,[CreatedBy]
+      ,[DateCreated]
+      ,[ModifiedBy]
+      ,[DateModified]
+      ,[IsActive]
           FROM [dbo].[Property]
           WHERE OwnerID = @OwnerID 
         `),
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
-          SELECT [ConsiderationID]
+          SELECT  [ConsiderationID]
       ,[OwnerID]
       ,[PropertyID]
       ,[ConsiderationType]
       ,[Description]
       ,[CreatedBy]
       ,[GeoLocation]
+      ,[DateCreated]
+      ,[ModifiedBy]
+      ,[DateModified]
+      ,[IsActive]
           FROM [dbo].[SpecialConsideration]
           WHERE OwnerID = @OwnerID 
         `),
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
-          SELECT[FileID]
+          SELECT [FileID]
       ,[OwnerID]
       ,[PropertyID]
       ,[OriginalName]
       ,[FileName]
       ,[FilePath]
       ,[FileSize]
+      ,[CreatedBy]
+      ,[DateCreated]
+      ,[ModifiedBy]
+      ,[DateModified]
+      ,[IsActive]
           FROM [dbo].[FileMetadata]
+          WHERE OwnerID = @OwnerID 
+        `),
+        pool.request()
+        .input("OwnerID", sql.Int, OwnerID)
+        .query(`
+          SELECT [documentID]
+      ,[OwnerID]
+      ,[PropertyID]
+      ,[tenantName]
+      ,[documentName]
+      ,[documentPath]
+      ,[documentSize]
+      ,[documentType]
+      ,[CreatedBy]
+      ,[DateCreated]
+      ,[ModifiedBy]
+      ,[DateModified]
+      ,[IsActive]
+          FROM [dbo].[TenantDocuments]
           WHERE OwnerID = @OwnerID 
         `)
     ]);
@@ -114,6 +164,7 @@ console.log(ownerResult.recordset[0]);
       properties: properties.recordset,
       considerations: considerations.recordset,
       files: files.recordset,
+      TenantDocuments: TenantDocuments.recordset
     });
   } catch (err) {
     console.error(err);
