@@ -1,71 +1,83 @@
+const { response } = require('express');
 const { sql, poolPromise } = require('../config/db');
 
 const updateOwner = async (req, res) => {
-    console.log(req.body);
-    const { ownerDetails } = req.body;
+  try {
+    const {
+      OwnerID,
+      FirstName,
+      MiddleName,
+      LastName,
+      FatherName,
+      MobileNumber,
+      Occupation,
+      Age,
+      DOB,
+      Gender,
+      Income,
+      Religion,
+      Category,
+      AdharNumber,
+      PanNumber,
+      Email,
+      NumberOfMembers,
+      ModifiedBy,
+      DateModified,
+    } = req.body;
 
-    if (!ownerDetails || !ownerDetails.OwnerID) {
-        return res.status(400).json({ success: false, message: 'OwnerID is required to update owner details' });
-    }
+    const pool = await poolPromise;
 
-    try {
-        const pool = await poolPromise;
+    console.log('Received owner details:', req.body);
 
-        // Update owner in PropertyOwner table
-        const updateResult = await pool.request()
-            .input('ownerID', sql.Int, ownerDetails.OwnerID)
-            .input('firstName', sql.NVarChar, ownerDetails.firstName)
-            .input('middleName', sql.NVarChar, ownerDetails.middleName)
-            .input('lastName', sql.NVarChar, ownerDetails.lastName)
-            .input('mobileNumber', sql.VarChar, ownerDetails.mobileNumber)
-            .input('occupation', sql.NVarChar, ownerDetails.occupation)
-            .input('age', sql.NVarChar, ownerDetails.age)
-            .input('gender', sql.Char, ownerDetails.gender)
-            .input('income', sql.NVarChar, ownerDetails.income)
-            .input('religion', sql.NVarChar, ownerDetails.religion)
-            .input('category', sql.NVarChar, ownerDetails.category)
-            .input('modifiedBy', sql.NVarChar, ownerDetails.modifiedBy)
-            .input('Email', sql.NVarChar, ownerDetails.Email)
-            .input('PanNumber', sql.NVarChar, ownerDetails.PanNumber)
-            .input('AdharNumber', sql.NVarChar, ownerDetails.AdharNumber)
-            .input('NumberOfMembers', sql.Int, ownerDetails.NumberOfMembers)
-            .input('Cast', sql.NVarChar, ownerDetails.Cast)
-            .query(`
-                UPDATE PropertyOwner
-                SET FirstName = @firstName,
-                    MiddleName = @middleName,
-                    LastName = @lastName,
-                    MobileNumber = @mobileNumber,
-                    Occupation = @occupation,
-                    Age = @age,
-                    Gender = @gender,
-                    Income = @income,
-                    Religion = @religion,
-                    Category = @category,
-                    ModifiedBy = @modifiedBy,
-                    Email = @Email,
-                    PanNumber = @PanNumber,
-                    AdharNumber = @AdharNumber,
-                    NumberOfMembers = @NumberOfMembers,
-                    Cast = @Cast
-                WHERE OwnerID = @ownerID
-            `);
-
-        if (updateResult.rowsAffected[0] === 0) {
-            return res.status(404).json({ success: false, message: 'Owner not found or no changes made' });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Owner details updated successfully'
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: err.message });
-    }
+    await pool.request()
+      .input('OwnerID', sql.Int, OwnerID)
+      .input('FirstName', sql.NVarChar, FirstName)
+      .input('MiddleName', sql.NVarChar, MiddleName)
+      .input('LastName', sql.NVarChar, LastName)
+      .input('FatherName', sql.NVarChar, FatherName)
+      .input('MobileNumber', sql.VarChar, MobileNumber)
+      .input('Occupation', sql.NVarChar, Occupation)
+      .input('Age', sql.NVarChar, Age)
+      .input('DOB', sql.NVarChar, DOB)
+      .input('Gender', sql.Char, Gender)
+      .input('Income', sql.NVarChar, Income)
+      .input('Religion', sql.NVarChar, Religion)
+      .input('Category', sql.NVarChar, Category)
+      .input('AdharNumber', sql.NVarChar, AdharNumber)
+      .input('PanNumber', sql.NVarChar, PanNumber)
+      .input('Email', sql.NVarChar, Email)
+      .input('NumberOfMembers', sql.Int, NumberOfMembers)
+      .input('ModifiedBy', sql.NVarChar, ModifiedBy)
+      .input('DateModified', sql.DateTime, DateModified)
+      .query(`
+        UPDATE PropertyOwner
+        SET
+          FirstName = @FirstName,
+          MiddleName = @MiddleName,
+          LastName = @LastName,
+          FatherName = @FatherName,
+          MobileNumber = @MobileNumber,
+          Occupation = @Occupation,
+          Age = @Age,
+          DOB = @DOB,
+          Gender = @Gender,
+          Income = @Income,
+          Religion = @Religion,
+          Category = @Category,
+          AdharNumber = @AdharNumber,
+          PanNumber = @PanNumber,
+          Email = @Email,
+          NumberOfMembers = @NumberOfMembers,
+          ModifiedBy = @ModifiedBy,
+          DateModified = @DateModified
+        WHERE OwnerID = @OwnerID
+      `);
+console.log('Owner details updated successfully.', response.message);
+    res.status(200).json({ success: true, message: 'Owner details updated successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error updating owner details.', error: error.message });
+  }
 };
 
-module.exports = {
-    updateOwner
-};
+module.exports = { updateOwner };
