@@ -61,7 +61,7 @@ router.post('/getMaxHouseNumber', authenticateToken,getMaxHouseNumber);
 router.post('/data', GetOwnerDetails);
 router.post('/update', UpdateIsActive);
 
-router.post('/updateFamilyMember', updateFamilyMember);
+router.post('/updateFamily', updateFamilyMember);
 router.post('/updateOwner', updateOwner);
 router.post('/updatePropertyDetails', updatePropertyDetails);
 router.post('/updatePropertyDetailsHouse', updatePropertyDetailsHouse);
