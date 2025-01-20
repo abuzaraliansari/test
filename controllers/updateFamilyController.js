@@ -5,14 +5,15 @@ const updateFamilyMember = async (req, res) => {
     const {
       FamilyMemberID,
       OwnerID,
-      Relation,
       FirstName,
       LastName,
+      Relation,
       Age,
       DOB,
       Gender,
       Occupation,
       Income,
+      IsActive,
       ModifiedBy,
       DateModified,
     } = req.body;
@@ -22,28 +23,30 @@ const updateFamilyMember = async (req, res) => {
     await pool.request()
       .input('FamilyMemberID', sql.Int, FamilyMemberID)
       .input('OwnerID', sql.Int, OwnerID)
-      .input('Relation', sql.NVarChar, Relation)
       .input('FirstName', sql.NVarChar, FirstName)
       .input('LastName', sql.NVarChar, LastName)
+      .input('Relation', sql.NVarChar, Relation)
       .input('Age', sql.NVarChar, Age)
       .input('DOB', sql.NVarChar, DOB)
       .input('Gender', sql.Char, Gender)
       .input('Occupation', sql.NVarChar, Occupation)
       .input('Income', sql.NVarChar, Income)
+      .input('IsActive', sql.Bit, IsActive)
       .input('ModifiedBy', sql.NVarChar, ModifiedBy)
       .input('DateModified', sql.DateTime, DateModified)
       .query(`
         UPDATE FamilyMember
         SET
           OwnerID = @OwnerID,
-          Relation = @Relation,
           FirstName = @FirstName,
           LastName = @LastName,
+          Relation = @Relation,
           Age = @Age,
           DOB = @DOB,
           Gender = @Gender,
           Occupation = @Occupation,
           Income = @Income,
+          IsActive = @IsActive,
           ModifiedBy = @ModifiedBy,
           DateModified = @DateModified
         WHERE FamilyMemberID = @FamilyMemberID
