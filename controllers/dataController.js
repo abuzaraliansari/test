@@ -40,7 +40,7 @@ const GetOwnerDetails = async (req, res) => {
       `);
 
     if (ownerResult.recordset.length === 0) {
-      return res.status(404).json({ success: false, message: "Owner not found." });
+      return res.status(204).json({ success: false, message: "Owner not found." });
     }
 console.log(ownerResult.recordset[0]);
     const OwnerID = ownerResult.recordset[0].OwnerID;

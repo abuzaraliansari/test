@@ -65,7 +65,7 @@ router.post('/updateFamily', updateFamilyMember);
 router.post('/updateOwner', updateOwner);
 router.post('/updatePropertyDetails', updatePropertyDetails);
 router.post('/updatePropertyDetailsHouse', updatePropertyDetailsHouse);
-router.post('/updateSpecialConsideration', updateSpecialConsideration);
+router.post('/updateSpecial', updateSpecialConsideration);
 
 
 
