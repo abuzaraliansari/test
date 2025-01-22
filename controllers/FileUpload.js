@@ -13,8 +13,10 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
+        const { OwnerID, PropertyID } = req.body;
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${uniqueSuffix}-${file.originalname}`);
+        const formattedFilename = `${OwnerID}_${PropertyID}_Prop_${uniqueSuffix}_${file.originalname}`;
+        cb(null, formattedFilename);
     }
 });
 
