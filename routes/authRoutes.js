@@ -2,6 +2,7 @@ const express = require('express');
 const { login } = require('../controllers/loginController');
 const { addProperty } = require('../controllers/PropertyController');
 const { addOwner } = require('../controllers/OwnerController');
+const { checkMobileNumber } = require('../controllers/checkMobileNumber');
 const { addfamilyMember } = require('../controllers/FamilyController');
 const { addPropertyDetails } = require('../controllers/PropertyDetailsController');
 const { addPropertyDetails1 } = require('../controllers/PropertyDetailsAreaController');
@@ -32,11 +33,19 @@ const { updateSpecialConsideration } = require('../controllers/updateSpecialCons
 const authenticateToken = require('../middlewares/authMiddleware');
 
 
+const { loginC, signup } = require('../controllers/authController');
+const { submitComplaint } = require('../controllers/complaintController');
+const { getComplaints } = require('../controllers/ComplainStatus');
+const { getComplaintReplies, submitComplaintReply } = require('../controllers/complaintReplyController');
+
+
+
 const router = express.Router();
 
 router.post('/login', login);
 router.post('/property', authenticateToken,addProperty);
 router.post('/owner', authenticateToken,addOwner);
+router.post('/checkMobile', checkMobileNumber);
 router.post('/family',authenticateToken, addfamilyMember);
 router.post('/PropertyDetails',authenticateToken,addPropertyDetails);
 router.post('/PropertyDetails1', authenticateToken,addPropertyDetails1);
@@ -66,6 +75,14 @@ router.post('/updateOwner', updateOwner);
 router.post('/updatePropertyDetails', updatePropertyDetails);
 router.post('/updatePropertyDetailsHouse', updatePropertyDetailsHouse);
 router.post('/updateSpecial', updateSpecialConsideration);
+
+router.post('/loginC', loginC);
+router.post('/signup', signup);
+router.post('/complaints', submitComplaint);
+router.post('/complain', getComplaints);
+router.post('/complaintsreplies', getComplaintReplies);
+router.post('/complaintsreply', submitComplaintReply);
+
 
 
 
