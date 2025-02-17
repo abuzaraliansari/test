@@ -37,6 +37,7 @@ const { loginC, signup } = require('../controllers/authController');
 const { submitComplaint } = require('../controllers/complaintController');
 const { getComplaints } = require('../controllers/ComplainStatus');
 const { getComplaintReplies, submitComplaintReply } = require('../controllers/complaintReplyController');
+const {getComplaintsByDateRange, getAllComplaintsByDateRange} = require('../controllers/ComplaintsByDateRange');
 
 
 
@@ -83,9 +84,8 @@ router.post('/complaints', submitComplaint);
 router.post('/complain', getComplaints);
 router.post('/complaintsreplies', getComplaintReplies);
 router.post('/complaintsreply', submitComplaintReply);
-
-
-
+router.post('/getComplaintsByDateRange', getComplaintsByDateRange);
+router.post('/getAllComplaintsByDateRange', getAllComplaintsByDateRange);
 
 
 
