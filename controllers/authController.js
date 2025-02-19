@@ -53,7 +53,7 @@ const loginC = async (req, res) => {
   };
 
 const signup = async (req, res) => {
-    const { username, mobileno, password, emailID, isAdmin } = req.body;
+    const { username, mobileno, password, emailID } = req.body;
   
     try {
       const existingUser = await findUserByUsernameOrMobile(username, mobileno);
@@ -63,7 +63,7 @@ const signup = async (req, res) => {
       }
   
       const hashedPassword = await bcrypt.hash(password, 10);
-      const userCreated = await createUser(username, mobileno, password, hashedPassword, emailID, isAdmin);
+      const userCreated = await createUser(username, mobileno, password, hashedPassword, emailID);
   
       if (userCreated) {
         res.json({ success: true, message: "User created successfully" });

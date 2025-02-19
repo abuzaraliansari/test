@@ -12,6 +12,7 @@ const submitComplaint = async (req, res) => {
     emailID,
     complaintStatus,
     ipAddress,
+    isAdmin // Add isAdmin field
   } = req.body;
 
   try {
@@ -28,8 +29,9 @@ const submitComplaint = async (req, res) => {
       .input("emailID", sql.VarChar, emailID)
       .input("complaintStatus", sql.VarChar, complaintStatus)
       .input("ipAddress", sql.VarChar, ipAddress)
+      .input("isAdmin", sql.Bit, isAdmin) // Add isAdmin input
       .query(
-        "INSERT INTO tblComplaints (Description, AttachmentDOC, UserImage, Location, CreatedBy, CreatedDate, mobileno, EmailID, ComplaintStatus, IPAddress) VALUES (@description, @attachmentDoc, @userImage, @location, @createdBy, @createdDate, @mobileno, @emailID, @complaintStatus, @ipAddress)"
+        "INSERT INTO tblComplaints (Description, AttachmentDOC, UserImage, Location, CreatedBy, CreatedDate, mobileno, EmailID, ComplaintStatus, IPAddress, isAdmin) VALUES (@description, @attachmentDoc, @userImage, @location, @createdBy, @createdDate, @mobileno, @emailID, @complaintStatus, @ipAddress, @isAdmin)"
       );
 
     res.status(200).json({ success: true, message: "Complaint submitted successfully" });

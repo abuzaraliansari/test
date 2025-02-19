@@ -1,39 +1,41 @@
 const { sql, poolPromise } = require("../config/db");
 
 const getComplaints = async (req, res) => {
-  const { mobileno, createdBy } = req.body; // Get data from the body instead of query parameters
+  const { mobileno, createdBy, isAdmin } = req.body;
 
   console.log("Received mobileno:", mobileno);
   console.log("Received createdBy:", createdBy);
-  
+  console.log("Received isAdmin:", isAdmin);
 
-  if (!mobileno && !createdBy) {
-    return res.status(400).json({ success: false, message: "mobileno or createdBy must be provided" });
+  if (!isAdmin && (!mobileno || !createdBy)) {
+    return res.status(400).json({ success: false, message: "mobileno or createdBy must be provided for non-admin users" });
   }
 
   try {
     const pool = await poolPromise;
+    let query = `SELECT 
+                  [CategoryID],
+                  [Description],
+                  [AttachmentDOC],
+                  [UserImage],
+                  [Location],
+                  [CreatedBy],
+                  [CreatedDate],
+                  [mobileno],
+                  [EmailID],
+                  [ComplaintStatus],
+                  [IPAddress]
+                FROM tblComplaints`;
+
+    if (!isAdmin) {
+      query += ` WHERE mobileno = @mobileno AND CreatedBy = @createdBy`;
+    }
+
     const result = await pool
       .request()
       .input("mobileno", sql.VarChar, mobileno || '')
       .input("createdBy", sql.VarChar, createdBy || '')
-      .query(
-        `SELECT 
-          [CategoryID],
-          [Description],
-          [AttachmentDOC],
-          [UserImage],
-          [Location],
-          [CreatedBy],
-          [CreatedDate],
-          [mobileno],
-          [EmailID],
-          [ComplaintStatus],
-          [IPAddress]
-        FROM tblComplaints 
-        WHERE (@mobileno = '' OR mobileno = @mobileno) 
-        OR (@createdBy = '' OR CreatedBy = @createdBy)`
-      );
+      .query(query);
 
     console.log("Query result:", result.recordset);
 
@@ -83,4 +85,5 @@ const getAllComplaintsByDateRange = async (req, res) => {
 
 module.exports = {
   getComplaints,
+  getAllComplaintsByDateRange
 };

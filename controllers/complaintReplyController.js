@@ -1,62 +1,66 @@
 const { sql, poolPromise } = require("../config/db");
 
 const getComplaintReplies = async (req, res) => {
-  const { Complaintno } = req.body;
+  const { complaintno } = req.body;
+
+  if (!complaintno) {
+    return res.status(400).json({ success: false, message: "complaintno must be provided" });
+  }
 
   try {
     const pool = await poolPromise;
     const result = await pool
       .request()
-      .input("Complaintno", sql.Int, Complaintno)
+      .input("complaintno", sql.Int, complaintno)
       .query(
         `SELECT 
           [ReplySno],
+          [Attachment],
           [Complaintno],
           [ReplyDescription],
           [ReplyDate],
-          [IPAddress]
+          [IPAddress],
+          [IsAdmin]
         FROM tblComplaintsReply 
-        WHERE Complaintno = @Complaintno`
+        WHERE Complaintno = @complaintno
+        ORDER BY ReplyDate ASC`
       );
 
     res.status(200).json(result.recordset);
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to fetch replies", error: err.message });
+    console.error("Error fetching complaint replies:", err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch complaint replies", error: err.message });
   }
 };
 
-
 const submitComplaintReply = async (req, res) => {
-  const { Complaintno, ReplyDescription, IPAddress } = req.body;
+  const { complaintno, replyDescription, isAdmin, ipAddress, attachment } = req.body;
+
+  if (!complaintno || !replyDescription) {
+    return res.status(400).json({ success: false, message: "complaintno and replyDescription must be provided" });
+  }
 
   try {
     const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .input("Complaintno", sql.Int, Complaintno)
-      .query(
-        `SELECT ISNULL(MAX(ReplySno), 0) + 1 AS NewReplySno 
-         FROM tblComplaintsReply 
-         WHERE Complaintno = @Complaintno`
-      );
 
-    const newReplySno = result.recordset[0].NewReplySno;
-
+    // Insert the new reply
     await pool
       .request()
-      .input("Complaintno", sql.Int, Complaintno)
-      .input("ReplySno", sql.Int, newReplySno)
-      .input("ReplyDescription", sql.Text, ReplyDescription)
-      .input("IPAddress", sql.VarChar, IPAddress)
+      .input("complaintno", sql.Int, complaintno)
+      .input("attachment", sql.VarChar, attachment)
+      .input("replyDescription", sql.VarChar, replyDescription)
+      .input("replyDate", sql.DateTime, new Date())
+      .input("ipAddress", sql.VarChar, ipAddress)
+      .input("isAdmin", sql.Bit, isAdmin)
       .query(
-        `INSERT INTO tblComplaintsReply (Complaintno, ReplySno, ReplyDescription, IPAddress) 
-         VALUES (@Complaintno, @ReplySno, @ReplyDescription, @IPAddress)`
+        `INSERT INTO tblComplaintsReply (Complaintno, Attachment, ReplyDescription, ReplyDate, IPAddress, IsAdmin)
+        VALUES (@complaintno, @attachment, @replyDescription, @replyDate, @ipAddress, @isAdmin)`
       );
 
-    res.status(200).json({ success: true, message: "Reply submitted successfully" });
+    res.status(201).json({ success: true, message: "Reply submitted successfully" });
   } catch (err) {
-    console.error('Error submitting reply:', err);
-    res.status(500).json({ success: false, message: "Failed to submit reply", error: err.message });
+    console.error("Error submitting complaint reply:", err.message);
+    res.status(500).json({ success: false, message: "Failed to submit complaint reply", error: err.message });
   }
 };
 
