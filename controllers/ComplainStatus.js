@@ -1,13 +1,13 @@
 const { sql, poolPromise } = require("../config/db");
 
 const getComplaints = async (req, res) => {
-  const { mobileno, createdBy, isAdmin } = req.body;
+  const { mobileNumber, createdBy, isAdmin } = req.body;
 
-  console.log("Received mobileno:", mobileno);
+  console.log("Received mobileno:", mobileNumber);
   console.log("Received createdBy:", createdBy);
   console.log("Received isAdmin:", isAdmin);
 
-  if (!isAdmin && (!mobileno || !createdBy)) {
+  if (!isAdmin && (!mobileNumber || !createdBy)) {
     return res.status(400).json({ success: false, message: "mobileno or createdBy must be provided for non-admin users" });
   }
 
@@ -28,12 +28,12 @@ const getComplaints = async (req, res) => {
                 FROM tblComplaints`;
 
     if (!isAdmin) {
-      query += ` WHERE mobileno = @mobileno AND CreatedBy = @createdBy`;
+      query += ` WHERE mobileno = @mobileNumber AND CreatedBy = @createdBy`;
     }
 
     const result = await pool
       .request()
-      .input("mobileno", sql.VarChar, mobileno || '')
+      .input("mobileno", sql.VarChar, mobileNumber || '')
       .input("createdBy", sql.VarChar, createdBy || '')
       .query(query);
 

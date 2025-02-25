@@ -1,26 +1,30 @@
 const jwt = require("jsonwebtoken");
 const { sql, poolPromise } = require("../config/db");
+const bcrypt = require('bcryptjs');
 
 require("dotenv").config();
 
 const loginC = async (req, res) => {
-  const { firstName, mobileNumber, password } = req.body;
+  const { username, mobileNumber, password } = req.body;
 
   try {
     const pool = await poolPromise;
     const result = await pool
       .request()
-      .input("firstName", sql.NVarChar, firstName)
-      .input("mobileNumber", sql.VarChar, mobileNumber)
-      .query("SELECT OwnerID, FirstName, MobileNumber, Email, IsActive FROM PropertyOwner WHERE FirstName = @firstName AND MobileNumber = @mobileNumber");
+      .input("username", sql.NVarChar, username || null)
+      .input("mobileNumber", sql.NVarChar, mobileNumber || null)
+      .query(`
+        SELECT * FROM Users 
+        WHERE (Username = @username OR MobileNo = @mobileNumber)
+      `);
 
     if (result.recordset.length > 0) {
       const user = result.recordset[0];
-      const validPassword = password === "1234"; // Common password for all users
+      const validPassword = await bcrypt.compare(password, user.PasswordHash);
 
       if (validPassword) {
         const token = jwt.sign(
-          { userId: user.OwnerID, username: user.FirstName },
+          { userId: user.UserID, username: user.Username },
           process.env.JWT_SECRET_KEY,
           { expiresIn: "1h" }
         );
@@ -30,12 +34,15 @@ const loginC = async (req, res) => {
           message: "Login successful",
           token: token,
           user: {
-            username: user.FirstName,
-            mobileno: user.MobileNumber,
-            emailID: user.Email,
-            isAdmin: user.IsActive
+            userID: user.UserID,
+            username: user.Username,
+            mobileNumber: user.MobileNo,
+            emailID: user.EmailID,
+            isAdmin: user.isAdmin,
+            isActive: user.IsActive
           }
         });
+        console.log("User ID:", user.UserID);
       } else {
         res.status(401).json({ success: false, message: "Invalid password" });
       }

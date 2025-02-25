@@ -1,5 +1,6 @@
 const { sql, poolPromise } = require('../config/db');
 const { response } = require('express');
+const bcrypt = require('bcryptjs');
 
 const addOwnerProperty = async (req, res) => {
     const { ownerDetails, familyMembers, propertyDetails, specialConsideration } = req.body;
@@ -7,10 +8,10 @@ const addOwnerProperty = async (req, res) => {
     if (!ownerDetails) {
         return res.status(400).json({ success: false, message: 'Owner details are required' });
     }
-
+    let transaction;
     try {
         const pool = await poolPromise;
-        const transaction = new sql.Transaction(pool);
+        transaction = new sql.Transaction(pool);
 
         await transaction.begin();
 
@@ -41,6 +42,27 @@ const addOwnerProperty = async (req, res) => {
             `);
 
         const ownerID = ownerResult.recordset[0].OwnerID;
+
+      // Insert user details into Users table
+      const password = ownerDetails.mobileNumber.slice(0, 4) + ownerDetails.AdharNumber.slice(-4);
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      await transaction.request()
+          .input('Username', sql.NVarChar, ownerDetails.firstName)
+          .input('MobileNo', sql.NVarChar, ownerDetails.mobileNumber)
+          .input('EmailID', sql.NVarChar, ownerDetails.Email)
+          .input('password', sql.NVarChar, password)
+          .input('PasswordHash', sql.NVarChar, passwordHash)
+          .input('CreatedBy', sql.NVarChar, ownerDetails.CreatedBy) // Ensure CreatedBy is a string
+          .input('CreatedDate', sql.DateTime, new Date())
+          .input('ModifiedBy', sql.NVarChar, ownerDetails.ModifiedBy)
+          .input('ModifiedDate', sql.DateTime, ownerDetails.DateModified)
+          .input('isAdmin', sql.Bit, 0)
+          .input('IsActive', sql.Bit, 1) // Ensure IsActive is set to 1
+          .query(`
+              INSERT INTO Users (Username, MobileNo, EmailID, password, PasswordHash, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, isAdmin, IsActive)
+              VALUES (@Username, @MobileNo, @EmailID, @password, @PasswordHash, @CreatedBy, @CreatedDate, @ModifiedBy, @ModifiedDate, @isAdmin, @IsActive)
+          `);
 console.log(ownerID)
 console.log(ownerResult)
         // Insert family members if provided
