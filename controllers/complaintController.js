@@ -20,6 +20,7 @@ const submitComplaint = async (req, res) => {
 
   console.log('Mobile Number:', mobileNumber);
   console.log('User ID:', userID);
+  console.log('createdBy:', createdBy);
 
   let docUrl = null;
   let imageUrl = null;
@@ -46,7 +47,7 @@ const submitComplaint = async (req, res) => {
       .input("attachmentDoc", sql.VarChar, attachmentDoc)
       .input("userImage", sql.VarChar, userImage)
       .input("location", sql.VarChar, location)
-      .input("createdBy", sql.Int, createdBy) // Ensure createdBy is handled as a number
+      .input("createdBy", sql.NVarChar, createdBy) // Ensure createdBy is handled as a string
       .input("createdDate", sql.DateTime, createdDate)
       .input("mobileno", sql.VarChar, mobileNumber)
       .input("complaintsStatus", sql.VarChar, complaintStatus) // Corrected column name

@@ -39,10 +39,10 @@ const getComplaints = async (req, res) => {
       .request()
       .input("startDate", sql.DateTime, new Date(startDate))
       .input("endDate", sql.DateTime, new Date(endDate))
-      .input("mobileNumber", sql.VarChar, mobileNumber || '')
-      .input("createdBy", sql.Int, createdBy || '')
-      .input("complaintType", sql.NVarChar, complaintType || '')
-      .input("complaintStatus", sql.NVarChar, complaintStatus || '')
+      .input("mobileNumber", sql.VarChar, mobileNumber || null)
+      .input("createdBy", sql.NVarChar, createdBy || null)
+      .input("complaintType", sql.NVarChar, complaintType || null)
+      .input("complaintStatus", sql.NVarChar, complaintStatus || null)
       .query(query);
 
     console.log("Query result:", result.recordset);
@@ -53,6 +53,7 @@ const getComplaints = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch complaints", error: err.message });
   }
 };
+
 
 const getComplaintsByDateRange = async (req, res) => {
   const { startDate, endDate } = req.body;
