@@ -14,15 +14,18 @@ const getComplaintReplies = async (req, res) => {
       .input("complaintno", sql.Int, complaintno)
       .query(
         `SELECT 
-          [ReplySno],
-          [Attachment],
-          [Complaintno],
+          [ReplyID],
+          [ComplaintID],
           [ReplyDescription],
+          [ReplyBy],
           [ReplyDate],
-          [IPAddress],
+          [CreatedBy],
+          [CreatedDate],
+          [ModifiedBy],
+          [ModifiedDate],
           [IsAdmin]
-        FROM tblComplaintsReply 
-        WHERE Complaintno = @complaintno
+        FROM ComplaintReplies 
+        WHERE ComplaintID = @complaintno
         ORDER BY ReplyDate ASC`
       );
 
@@ -34,7 +37,7 @@ const getComplaintReplies = async (req, res) => {
 };
 
 const submitComplaintReply = async (req, res) => {
-  const { complaintno, replyDescription, isAdmin, ipAddress, attachment } = req.body;
+  const { complaintno, replyDescription, isAdmin, ipAddress, attachment, userDetails } = req.body;
 
   if (!complaintno || !replyDescription) {
     return res.status(400).json({ success: false, message: "complaintno and replyDescription must be provided" });
@@ -47,14 +50,13 @@ const submitComplaintReply = async (req, res) => {
     await pool
       .request()
       .input("complaintno", sql.Int, complaintno)
-      .input("attachment", sql.VarChar, attachment)
-      .input("replyDescription", sql.VarChar, replyDescription)
-      .input("replyDate", sql.DateTime, new Date())
-      .input("ipAddress", sql.VarChar, ipAddress)
+      .input("replyDescription", sql.Text, replyDescription)
+      .input("replyBy", sql.NVarChar, userDetails.username)
+      .input("createdBy", sql.VarChar, userDetails.username)
       .input("isAdmin", sql.Bit, isAdmin)
       .query(
-        `INSERT INTO tblComplaintsReply (Complaintno, Attachment, ReplyDescription, ReplyDate, IPAddress, IsAdmin)
-        VALUES (@complaintno, @attachment, @replyDescription, @replyDate, @ipAddress, @isAdmin)`
+        `INSERT INTO ComplaintReplies (ComplaintID, ReplyDescription, ReplyBy, CreatedBy, IsAdmin)
+        VALUES (@complaintno, @replyDescription, @replyBy, @createdBy, @isAdmin)`
       );
 
     res.status(201).json({ success: true, message: "Reply submitted successfully" });
