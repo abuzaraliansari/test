@@ -53,7 +53,7 @@ const submitComplaintReply = async (req, res) => {
       .input("replyDescription", sql.Text, replyDescription)
       .input("replyBy", sql.NVarChar, userDetails.username)
       .input("createdBy", sql.VarChar, userDetails.username)
-      .input("isAdmin", sql.Bit, isAdmin)
+      .input("isAdmin", sql.Bit, isAdmin ? 1 : 0)
       .query(
         `INSERT INTO ComplaintReplies (ComplaintID, ReplyDescription, ReplyBy, CreatedBy, IsAdmin)
         VALUES (@complaintno, @replyDescription, @replyBy, @createdBy, @isAdmin)`

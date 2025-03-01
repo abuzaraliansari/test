@@ -24,6 +24,9 @@ const getComplaints = async (req, res) => {
     if (!isAdmin) {
       query += ` AND MobileNo = @mobileNumber AND CreatedBy = @createdBy`;
     }
+    if (mobileNumber) {
+      query += ` AND MobileNo = @mobileNumber`;
+    }
 
     if (complaintType) {
       query += ` AND ComplaintsType = @complaintType`;

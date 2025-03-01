@@ -14,8 +14,11 @@ const submitComplaint = async (req, res) => {
     complaintStatus,
     ipAddress,
     isAdmin,
-    userID, // Ensure this line is included
-    complaintType // Ensure this line is included
+    userID,
+    complaintType,
+    zoneID,
+    localityID,
+    colony
   } = req.body;
 
   console.log('Mobile Number:', mobileNumber);
@@ -24,41 +27,84 @@ const submitComplaint = async (req, res) => {
 
   let docUrl = null;
   let imageUrl = null;
+  let docID = null;
+  let imageID = null;
 
   try {
-    // Save the document locally
-    if (attachmentDoc) {
-      const docPath = path.join(__dirname, '..', 'uploads', 'docs', attachmentDoc);
-      fs.writeFileSync(docPath, Buffer.from(attachmentDoc, 'base64'));
-      docUrl = `http://localhost:3000/uploads/docs/${attachmentDoc}`;
-    }
-
-    // Save the image locally
-    if (userImage) {
-      const imagePath = path.join(__dirname, '..', 'uploads', 'images', userImage);
-      fs.writeFileSync(imagePath, Buffer.from(userImage, 'base64'));
-      imageUrl = `http://localhost:3000/uploads/images/${userImage}`;
-    }
-
     const pool = await poolPromise;
+
+    // Save the document locally and in the database
+    if (attachmentDoc) {
+      const docPath = path.join(__dirname, '..', 'uploads', attachmentDoc);
+      fs.writeFileSync(docPath, Buffer.from(attachmentDoc, 'base64'));
+      docUrl = `http://localhost:3000/uploads/${attachmentDoc}`;
+
+      const docResult = await pool
+        .request()
+        .input("UserID", sql.Int, userID)
+        .input("DocUrl", sql.NVarChar, docUrl)
+        .input("DocName", sql.NVarChar, attachmentDoc)
+        .input("DocPath", sql.NVarChar, docPath)
+        .input("DocSize", sql.Int, fs.statSync(docPath).size)
+        .input("CreatedBy", sql.NVarChar, createdBy)
+        .query(
+          "INSERT INTO ComplainDoc (UserID, DocUrl, DocName, DocPath, DocSize, CreatedBy) OUTPUT INSERTED.DocID VALUES (@UserID, @DocUrl, @DocName, @DocPath, @DocSize, @CreatedBy)"
+        );
+
+      if (docResult.recordset && docResult.recordset.length > 0) {
+        docID = docResult.recordset[0].DocID;
+      } else {
+        throw new Error("Failed to retrieve inserted document ID");
+      }
+    }
+
+    // Save the image locally and in the database
+    if (userImage) {
+      const imagePath = path.join(__dirname, '..', 'uploads', userImage);
+      fs.writeFileSync(imagePath, Buffer.from(userImage, 'base64'));
+      imageUrl = `http://localhost:3000/uploads/${userImage}`;
+
+      const imageResult = await pool
+        .request()
+        .input("UserID", sql.Int, userID)
+        .input("ImageUrl", sql.NVarChar, imageUrl)
+        .input("ImageName", sql.NVarChar, userImage)
+        .input("ImagePath", sql.NVarChar, imagePath)
+        .input("ImageSize", sql.Int, fs.statSync(imagePath).size)
+        .input("CreatedBy", sql.NVarChar, createdBy)
+        .query(
+          "INSERT INTO ComplainImage (UserID, ImageUrl, ImageName, ImagePath, ImageSize, CreatedBy) OUTPUT INSERTED.ImageID VALUES (@UserID, @ImageUrl, @ImageName, @ImagePath, @ImageSize, @CreatedBy)"
+        );
+
+      if (imageResult.recordset && imageResult.recordset.length > 0) {
+        imageID = imageResult.recordset[0].ImageID;
+      } else {
+        throw new Error("Failed to retrieve inserted image ID");
+      }
+    }
+
+    // Insert the complaint into the Complaints table
     const result = await pool
       .request()
       .input("description", sql.Text, description)
-      .input("attachmentDoc", sql.VarChar, attachmentDoc)
-      .input("userImage", sql.VarChar, userImage)
       .input("location", sql.VarChar, location)
-      .input("createdBy", sql.NVarChar, createdBy) // Ensure createdBy is handled as a string
+      .input("createdBy", sql.NVarChar, createdBy)
       .input("createdDate", sql.DateTime, createdDate)
       .input("mobileno", sql.VarChar, mobileNumber)
-      .input("complaintsStatus", sql.VarChar, complaintStatus) // Corrected column name
+      .input("complaintsStatus", sql.VarChar, complaintStatus)
       .input("ipAddress", sql.VarChar, ipAddress)
       .input("isAdmin", sql.Bit, isAdmin)
       .input("docUrl", sql.VarChar, docUrl)
       .input("imageUrl", sql.VarChar, imageUrl)
-      .input("userID", sql.Int, userID) // Ensure this line is included
-      .input("complaintType", sql.NVarChar, complaintType) // Ensure this line is included
+      .input("userID", sql.Int, userID)
+      .input("complaintType", sql.NVarChar, complaintType)
+      .input("zoneID", sql.Int, zoneID)
+      .input("localityID", sql.Int, localityID)
+      .input("colony", sql.NVarChar, colony)
+      .input("docID", sql.Int, docID)
+      .input("imageID", sql.Int, imageID)
       .query(
-        "INSERT INTO Complaints (Description, AttachmentDOC, UserImage, Location, CreatedBy, CreatedDate, MobileNo, ComplaintsStatus, IPAddress, isAdmin, DocUrl, ImageUrl, UserID, ComplaintsType) OUTPUT INSERTED.ComplaintID VALUES (@description, @attachmentDoc, @userImage, @location, @createdBy, @createdDate, @mobileno, @complaintsStatus, @ipAddress, @isAdmin, @docUrl, @imageUrl, @userID, @complaintType)"
+        "INSERT INTO Complaints (Description, Location, CreatedBy, CreatedDate, MobileNo, ComplaintsStatus, IPAddress, isAdmin, DocUrl, ImageUrl, UserID, ComplaintsType, ZoneID, LocalityID, Colony, DocID, ImageID) OUTPUT INSERTED.ComplaintID VALUES (@description, @location, @createdBy, @createdDate, @mobileno, @complaintsStatus, @ipAddress, @isAdmin, @docUrl, @imageUrl, @userID, @complaintType, @zoneID, @localityID, @colony, @docID, @imageID)"
       );
 
     console.log("SQL Query Result:", result);
@@ -76,6 +122,46 @@ const submitComplaint = async (req, res) => {
   }
 };
 
+
+
+const updateComplaintStatus = async (req, res) => {
+  const { complaintno, status, modifiedBy } = req.body;
+
+  console.log("Received complaintno:", complaintno);
+  console.log("Received status:", status);
+  console.log("Received modifiedBy:", modifiedBy);
+
+  if (!complaintno || !status || !modifiedBy) {
+    return res.status(400).json({ success: false, message: "complaintno, status, and modifiedBy must be provided" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input("complaintno", sql.Int, complaintno)
+      .input("status", sql.NVarChar, status)
+      .input("modifiedBy", sql.NVarChar, modifiedBy)
+      .input("dateModified", sql.DateTime, new Date())
+      .query(
+        `UPDATE Complaints
+         SET ComplaintsStatus = @status,
+             ModifiedBy = @modifiedBy,
+             ModifiedDate = @dateModified
+         WHERE ComplaintID = @complaintno`
+      );
+
+    console.log("Update result:", result);
+
+    res.status(200).json({ success: true, message: "Complaint status updated successfully" });
+  } catch (err) {
+    console.error("Error updating complaint status:", err.message);
+    res.status(500).json({ success: false, message: "Failed to update complaint status", error: err.message });
+  }
+};
+
+
 module.exports = {
   submitComplaint,
+  updateComplaintStatus,
 };

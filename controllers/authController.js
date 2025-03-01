@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 
 require("dotenv").config();
 
+
 const loginC = async (req, res) => {
   const { username, mobileNumber, password } = req.body;
 
@@ -23,8 +24,21 @@ const loginC = async (req, res) => {
       const validPassword = await bcrypt.compare(password, user.PasswordHash);
 
       if (validPassword) {
+        // Fetch user roles
+        const rolesResult = await pool
+          .request()
+          .input("userID", sql.Int, user.UserID)
+          .query(`
+            SELECT r.RoleName 
+            FROM UserRoles ur
+            JOIN Roles r ON ur.RoleID = r.RoleID
+            WHERE ur.UserID = @userID
+          `);
+
+        const roles = rolesResult.recordset.map(role => role.RoleName);
+
         const token = jwt.sign(
-          { userId: user.UserID, username: user.Username },
+          { userId: user.UserID, username: user.Username, roles: roles },
           process.env.JWT_SECRET_KEY,
           { expiresIn: "1h" }
         );
@@ -38,11 +52,12 @@ const loginC = async (req, res) => {
             username: user.Username,
             mobileNumber: user.MobileNo,
             emailID: user.EmailID,
-            isAdmin: user.isAdmin,
+            roles: roles,
             isActive: user.IsActive
           }
         });
         console.log("User ID:", user.UserID);
+        console.log("Roles:", roles);
       } else {
         res.status(401).json({ success: false, message: "Invalid password" });
       }
@@ -53,6 +68,8 @@ const loginC = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
 
 const signup = async (req, res) => {
   const { username, mobileno, password, emailID } = req.body;
