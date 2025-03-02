@@ -1,12 +1,23 @@
 const { sql, poolPromise } = require("../config/db");
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '..', 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const submitComplaint = async (req, res) => {
   const {
     description,
-    attachmentDoc,
-    userImage,
     location,
     createdBy,
     createdDate,
@@ -20,6 +31,9 @@ const submitComplaint = async (req, res) => {
     localityID,
     colony
   } = req.body;
+
+  const attachmentDoc = req.files && req.files['attachmentDoc'] ? req.files['attachmentDoc'][0].filename : null;
+  const userImage = req.files && req.files['userImage'] ? req.files['userImage'][0].filename : null;
 
   console.log('Mobile Number:', mobileNumber);
   console.log('User ID:', userID);
@@ -36,7 +50,6 @@ const submitComplaint = async (req, res) => {
     // Save the document locally and in the database
     if (attachmentDoc) {
       const docPath = path.join(__dirname, '..', 'uploads', attachmentDoc);
-      fs.writeFileSync(docPath, Buffer.from(attachmentDoc, 'base64'));
       docUrl = `http://localhost:3000/uploads/${attachmentDoc}`;
 
       const docResult = await pool
@@ -61,7 +74,6 @@ const submitComplaint = async (req, res) => {
     // Save the image locally and in the database
     if (userImage) {
       const imagePath = path.join(__dirname, '..', 'uploads', userImage);
-      fs.writeFileSync(imagePath, Buffer.from(userImage, 'base64'));
       imageUrl = `http://localhost:3000/uploads/${userImage}`;
 
       const imageResult = await pool
@@ -122,8 +134,6 @@ const submitComplaint = async (req, res) => {
   }
 };
 
-
-
 const updateComplaintStatus = async (req, res) => {
   const { complaintno, status, modifiedBy } = req.body;
 
@@ -159,7 +169,6 @@ const updateComplaintStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to update complaint status", error: err.message });
   }
 };
-
 
 module.exports = {
   submitComplaint,
