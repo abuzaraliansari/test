@@ -23,6 +23,7 @@ const { updateSpecialConsideration } = require('../controllers/updateSpecialCons
 const authenticateToken = require('../middlewares/authMiddleware');
 const { loginC, signup } = require('../controllers/authController');
 const { submitComplaint, updateComplaintStatus } = require('../controllers/complaintController');
+const { submitFiles } = require('../controllers/submitFiles');
 const { getComplaints, getComplaintsByDateRange } = require('../controllers/ComplainStatus');
 const { getComplaintReplies, submitComplaintReply } = require('../controllers/complaintReplyController');
 
@@ -67,7 +68,8 @@ router.post('/updatePropertyDetailsHouse', updatePropertyDetailsHouse);
 router.post('/updateSpecial', updateSpecialConsideration);
 router.post('/loginC', loginC);
 router.post('/signup', signup);
-router.post('/complaints', upload.fields([{ name: 'attachmentDoc', maxCount: 1 }, { name: 'userImage', maxCount: 1 }]), submitComplaint);
+router.post('/complaints', submitComplaint);
+router.post('/submitFiles', upload.fields([{ name: 'attachmentDoc', maxCount: 1 }, { name: 'userImage', maxCount: 1 }]), submitFiles);
 router.post('/complaintsstatus', updateComplaintStatus);
 router.post('/complain', getComplaints);
 router.post('/complaintsreplies', getComplaintReplies);
