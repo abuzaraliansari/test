@@ -94,7 +94,45 @@ const updateComplaintStatus = async (req, res) => {
   }
 };
 
+
+const updateComplaintStatusOpen = async (req, res) => {
+  const { complaintno, status, modifiedBy } = req.body;
+
+  console.log("Received complaintno:", complaintno);
+  console.log("Received status:", status);
+  console.log("Received modifiedBy:", modifiedBy);
+
+  if (!complaintno || !status || !modifiedBy) {
+    return res.status(400).json({ success: false, message: "complaintno, status, and modifiedBy must be provided" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input("complaintno", sql.Int, complaintno)
+      .input("status", sql.NVarChar, status)
+      .input("modifiedBy", sql.NVarChar, modifiedBy)
+      .input("dateModified", sql.DateTime, new Date())
+      .query(
+        `UPDATE Complaints
+         SET ComplaintsStatus = @status,
+             ModifiedBy = @modifiedBy,
+             ModifiedDate = @dateModified
+         WHERE ComplaintID = @complaintno`
+      );
+
+    console.log("Update result:", result);
+
+    res.status(200).json({ success: true, message: "Complaint status updated successfully" });
+  } catch (err) {
+    console.error("Error updating complaint status:", err.message);
+    res.status(500).json({ success: false, message: "Failed to update complaint status", error: err.message });
+  }
+};
+
 module.exports = {
   submitComplaint,
-  updateComplaintStatus
+  updateComplaintStatus,
+  updateComplaintStatusOpen
 };
