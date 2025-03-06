@@ -46,8 +46,23 @@ const submitComplaint = async (req, res) => {
 
     if (result.recordset && result.recordset.length > 0) {
       const complaintID = result.recordset[0].ComplaintID;
-      console.log("Complaint ID:", complaintID);
-      res.status(200).json({ success: true, complaintID });
+      const currentDate = new Date();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const year = String(currentDate.getFullYear()).slice(-2);
+      const complaintTypeCode = complaintStatus === 'Open' ? '1' : '0';
+      const complaintRegistrationNo = `${month}${year}/${complaintTypeCode}/${zoneID}/${localityID}/${complaintID}`;
+
+      // Update the complaint with the generated ComplaintRegistrationNo
+      await pool
+        .request()
+        .input("complaintID", sql.Int, complaintID)
+        .input("complaintRegistrationNo", sql.NVarChar, complaintRegistrationNo)
+        .query(
+          "UPDATE Complaints SET ComplaintRegistrationNo = @complaintRegistrationNo WHERE ComplaintID = @complaintID"
+        );
+
+      console.log("Complaint Registration No:", complaintRegistrationNo);
+      res.status(200).json({ success: true, complaintID, complaintRegistrationNo });
     } else {
       throw new Error("Failed to retrieve inserted complaint ID");
     }
