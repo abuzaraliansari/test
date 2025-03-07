@@ -53,7 +53,13 @@ const loginC = async (req, res) => {
             mobileNumber: user.MobileNo,
             emailID: user.EmailID,
             roles: roles,
-            isActive: user.IsActive
+            isActive: user.IsActive,
+            zoneID: user.ZoneID,
+            locality: user.Locality,
+            colony: user.Colony,
+            galliNumber: user.GalliNumber,
+            houseNumber: user.HouseNumber,
+            geoLocation: user.GeoLocation
           }
         });
         console.log("User ID:", user.UserID);
@@ -68,7 +74,6 @@ const loginC = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 
 const signup = async (req, res) => {
