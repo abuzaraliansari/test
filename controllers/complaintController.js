@@ -16,7 +16,9 @@ const submitComplaint = async (req, res) => {
     complaintType,
     zoneID,
     localityID,
-    colony
+    colony,
+    locality,
+    zone
   } = req.body;
 
   try {
@@ -38,8 +40,10 @@ const submitComplaint = async (req, res) => {
       .input("zoneID", sql.Int, zoneID)
       .input("localityID", sql.Int, localityID)
       .input("colony", sql.NVarChar, colony)
+      .input("locality", sql.NVarChar, locality)
+      .input("zone", sql.NVarChar, zone)
       .query(
-        "INSERT INTO Complaints (Description, Location, CreatedBy, CreatedDate, MobileNo, ComplaintsStatus, IPAddress, isAdmin, UserID, ComplaintsType, ZoneID, LocalityID, Colony) OUTPUT INSERTED.ComplaintID VALUES (@description, @location, @createdBy, @createdDate, @mobileno, @complaintsStatus, @ipAddress, @isAdmin, @userID, @complaintType, @zoneID, @localityID, @colony)"
+        "INSERT INTO Complaints (Description, Location, CreatedBy, CreatedDate, MobileNo, ComplaintsStatus, IPAddress, isAdmin, UserID, ComplaintsType, ZoneID, LocalityID, Colony, locality, zone) OUTPUT INSERTED.ComplaintID VALUES (@description, @location, @createdBy, @createdDate, @mobileno, @complaintsStatus, @ipAddress, @isAdmin, @userID, @complaintType, @zoneID, @localityID, @colony, @locality, @zone)"
       );
 
     console.log("SQL Query Result:", result);

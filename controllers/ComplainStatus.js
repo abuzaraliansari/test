@@ -1,8 +1,7 @@
 const { sql, poolPromise } = require("../config/db");
 
-
 const getComplaints = async (req, res) => {
-  const { mobileNumber, createdBy, isAdmin, startDate, endDate, complaintType, complaintStatus } = req.body;
+  const { mobileNumber, createdBy, isAdmin, startDate, endDate, complaintType, complaintStatus, zone, locality } = req.body;
 
   console.log("Received mobileno:", mobileNumber);
   console.log("Received createdBy:", createdBy);
@@ -11,6 +10,8 @@ const getComplaints = async (req, res) => {
   console.log("Received endDate:", endDate);
   console.log("Received complaintType:", complaintType);
   console.log("Received complaintStatus:", complaintStatus);
+  console.log("Received zone:", zone);
+  console.log("Received locality:", locality);
 
   if (!isAdmin && (!mobileNumber || !createdBy)) {
     return res.status(400).json({ success: false, message: "mobileno or createdBy must be provided for non-admin users" });
@@ -36,6 +37,14 @@ const getComplaints = async (req, res) => {
       query += ` AND ComplaintsStatus = @complaintStatus`;
     }
 
+    if (zone) {
+      query += ` AND zone = @zone`;
+    }
+
+    if (locality) {
+      query += ` AND locality = @locality`;
+    }
+
     console.log("Executing query:", query);
 
     const result = await pool
@@ -46,6 +55,8 @@ const getComplaints = async (req, res) => {
       .input("createdBy", sql.NVarChar, createdBy || null)
       .input("complaintType", sql.NVarChar, complaintType || null)
       .input("complaintStatus", sql.NVarChar, complaintStatus || null)
+      .input("zone", sql.NVarChar, zone || null)
+      .input("locality", sql.NVarChar, locality || null)
       .query(query);
 
     console.log("Query result:", result.recordset);
@@ -56,7 +67,6 @@ const getComplaints = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch complaints", error: err.message });
   }
 };
-
 
 const getComplaintsByDateRange = async (req, res) => {
   const { startDate, endDate } = req.body;
@@ -75,7 +85,7 @@ const getComplaintsByDateRange = async (req, res) => {
       .input("startDate", sql.DateTime, new Date(startDate))
       .input("endDate", sql.DateTime, new Date(endDate))
       .query(
-        `SELECT * FROM tblComplaints 
+        `SELECT * FROM Complaints 
         WHERE CreatedDate BETWEEN @startDate AND @endDate`
       );
 

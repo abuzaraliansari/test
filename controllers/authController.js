@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 require("dotenv").config();
 
 
+
 const loginC = async (req, res) => {
   const { username, mobileNumber, password } = req.body;
 
@@ -15,8 +16,45 @@ const loginC = async (req, res) => {
       .input("username", sql.NVarChar, username || null)
       .input("mobileNumber", sql.NVarChar, mobileNumber || null)
       .query(`
-        SELECT * FROM Users 
-        WHERE (Username = @username OR MobileNo = @mobileNumber)
+        SELECT 
+          u.[UserID],
+    u.[Username],
+    u.[MobileNo],
+    u.[EmailID],
+    u.[Password],
+    u.[PasswordHash],
+    u.[CreatedBy],
+    u.[CreatedDate],
+    u.[ModifiedBy],
+    u.[ModifiedDate],
+    po.[AdharNumber],
+    p.[ZoneID],
+    p.[Locality],
+    p.[Colony],
+    p.[GalliNumber],
+    p.[HouseNumber],
+    sc.[GeoLocation],
+    c.[Colony] AS ColonyName,
+    l.[Locality] AS LocalityName,
+    l.[Zone] AS ZoneName
+        FROM 
+          dbo.Users u
+        INNER JOIN 
+          dbo.PropertyOwner po ON u.MobileNo = po.MobileNumber 
+        LEFT JOIN 
+          dbo.Property p ON po.OwnerID = p.OwnerID
+        LEFT JOIN 
+          dbo.SpecialConsideration sc ON po.OwnerID = sc.OwnerID
+        LEFT JOIN 
+          dbo.FileMetadata fmtd ON po.OwnerID = fmtd.OwnerID
+        LEFT JOIN 
+          dbo.TenantDocuments td ON po.OwnerID = td.OwnerID
+        LEFT JOIN 
+          dbo.Colony c ON p.Colony = c.Colony
+        LEFT JOIN 
+          dbo.Locality l ON c.LocalityID = l.LocalityID
+        WHERE  
+          (u.Username = @username OR u.MobileNo = @mobileNumber)
       `);
 
     if (result.recordset.length > 0) {
@@ -52,18 +90,27 @@ const loginC = async (req, res) => {
             username: user.Username,
             mobileNumber: user.MobileNo,
             emailID: user.EmailID,
+            createdBy: user.CreatedBy,
+            createdDate: user.CreatedDate,
+            modifiedBy: user.ModifiedBy,
+            modifiedDate: user.ModifiedDate,
             roles: roles,
-            isActive: user.IsActive,
+            firstName: user.FirstName,
+            adharNumber: user.AdharNumber,
             zoneID: user.ZoneID,
             locality: user.Locality,
             colony: user.Colony,
             galliNumber: user.GalliNumber,
             houseNumber: user.HouseNumber,
-            geoLocation: user.GeoLocation
+            geoLocation: user.GeoLocation,
+            colonyName: user.ColonyName,
+            localityName: user.LocalityName,
+            zoneName: user.ZoneName
           }
         });
         console.log("User ID:", user.UserID);
         console.log("Roles:", roles);
+        console.log(user);
       } else {
         res.status(401).json({ success: false, message: "Invalid password" });
       }
@@ -74,6 +121,7 @@ const loginC = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 const signup = async (req, res) => {
