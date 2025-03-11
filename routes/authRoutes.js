@@ -1,5 +1,7 @@
 const express = require('express');
-const { login } = require('../controllers/loginController');
+const { login, addUser } = require('../controllers/loginController');
+//const { addUser } = require('../controllers/userController');
+
 const { addProperty } = require('../controllers/PropertyController');
 const { addOwner } = require('../controllers/OwnerController');
 const { checkMobileNumber, checkMobile } = require('../controllers/checkMobileNumber');
@@ -43,6 +45,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post('/login', login);
+router.post('/addUser', addUser); 
 router.post('/property', authenticateToken, addProperty);
 router.post('/owner', authenticateToken, addOwner);
 router.post('/checkMobile', checkMobile);
