@@ -1,7 +1,8 @@
 const { sql, poolPromise } = require("../config/db");
 
 const getComplaints = async (req, res) => {
-  const { mobileNumber, createdBy, isAdmin, startDate, endDate, complaintType, complaintStatus, zone, locality } = req.body;
+  const { mobileNumber, createdBy, isAdmin, startDate, endDate, complaintType, complaintStatus, zone, locality, complaintID } = req.body;
+
 
   console.log("Received mobileno:", mobileNumber);
   console.log("Received createdBy:", createdBy);
@@ -12,6 +13,7 @@ const getComplaints = async (req, res) => {
   console.log("Received complaintStatus:", complaintStatus);
   console.log("Received zone:", zone);
   console.log("Received locality:", locality);
+  console.log("Received ComplaintID:", complaintID);
 
   if (!isAdmin && (!mobileNumber || !createdBy)) {
     return res.status(400).json({ success: false, message: "mobileno or createdBy must be provided for non-admin users" });
@@ -45,6 +47,10 @@ const getComplaints = async (req, res) => {
       query += ` AND locality = @locality`;
     }
 
+    if (complaintID) {
+      query += ` AND ComplaintID = @complaintID`; // Add ComplaintID filter
+    }
+
     console.log("Executing query:", query);
 
     const result = await pool
@@ -57,6 +63,7 @@ const getComplaints = async (req, res) => {
       .input("complaintStatus", sql.NVarChar, complaintStatus || null)
       .input("zone", sql.NVarChar, zone || null)
       .input("locality", sql.NVarChar, locality || null)
+      .input("complaintID", sql.Int, complaintID || null) // Bind ComplaintID
       .query(query);
 
     console.log("Query result:", result.recordset);
@@ -67,6 +74,83 @@ const getComplaints = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch complaints", error: err.message });
   }
 };
+
+
+const getUsers = async (req, res) => {
+  const { zone, locality, colony, galliNumber } = req.body;
+
+  try {
+    const pool = await poolPromise;
+    let query = `
+      SELECT 
+        u.[UserID],
+        u.[Username],
+        u.[MobileNo],
+        u.[EmailID],
+        u.[Password],
+        u.[PasswordHash],
+        u.[CreatedBy],
+        u.[CreatedDate],
+        u.[ModifiedBy],
+        u.[ModifiedDate],
+        po.[AdharNumber],
+        p.[ZoneID],
+        p.[Locality],
+        p.[Colony],
+        p.[GalliNumber],
+        p.[HouseNumber],
+        sc.[GeoLocation],
+        c.[Colony] AS ColonyName,
+        l.[Locality] AS LocalityName,
+        l.[Zone] AS ZoneName
+      FROM 
+        dbo.Users u
+      INNER JOIN 
+        dbo.PropertyOwner po ON u.MobileNo = po.MobileNumber 
+      LEFT JOIN 
+        dbo.Property p ON po.OwnerID = p.OwnerID
+      LEFT JOIN 
+        dbo.SpecialConsideration sc ON po.OwnerID = sc.OwnerID
+      LEFT JOIN 
+        dbo.FileMetadata fmtd ON po.OwnerID = fmtd.OwnerID
+      LEFT JOIN 
+        dbo.TenantDocuments td ON po.OwnerID = td.OwnerID
+      LEFT JOIN 
+        dbo.Colony c ON p.Colony = c.Colony
+      LEFT JOIN 
+        dbo.Locality l ON c.LocalityID = l.LocalityID
+      WHERE 1=1
+    `;
+
+    if (zone) {
+      query += ` AND l.Zone = @zone`;
+    }
+    if (locality) {
+      query += ` AND l.Locality = @locality`;
+    }
+    if (colony) {
+      query += ` AND p.Colony = @colony`;
+    }
+    if (galliNumber) {
+      query += ` AND p.GalliNumber = @galliNumber`;
+    }
+
+    const result = await pool
+      .request()
+      .input("zone", sql.NVarChar, zone || null)
+      .input("locality", sql.NVarChar, locality || null)
+      .input("colony", sql.NVarChar, colony || null)
+      .input("galliNumber", sql.NVarChar, galliNumber || null)
+      .query(query);
+
+    res.status(200).json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching users:", err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch users", error: err.message });
+  }
+};
+
+
 
 const getComplaintsByDateRange = async (req, res) => {
   const { startDate, endDate } = req.body;
@@ -100,5 +184,6 @@ const getComplaintsByDateRange = async (req, res) => {
 
 module.exports = {
   getComplaints,
+  getUsers,
   getComplaintsByDateRange,
 };

@@ -1,7 +1,5 @@
 const express = require('express');
-const { login, addUser } = require('../controllers/loginController');
-//const { addUser } = require('../controllers/userController');
-
+const { login } = require('../controllers/loginController');
 const { addProperty } = require('../controllers/PropertyController');
 const { addOwner } = require('../controllers/OwnerController');
 const { checkMobileNumber, checkMobile } = require('../controllers/checkMobileNumber');
@@ -23,10 +21,10 @@ const { updatePropertyDetails } = require('../controllers/updatePropertyDetailsA
 const updatePropertyDetailsHouse = require('../controllers/updatePropertyDetailsHouseController');
 const { updateSpecialConsideration } = require('../controllers/updateSpecialConsiderationController');
 const authenticateToken = require('../middlewares/authMiddleware');
-const { loginC, signup } = require('../controllers/authController');
+const { loginC, signup, updateUserStatus, getAllUsersWithRoles } = require('../controllers/authController');
 const { submitComplaint, updateComplaintStatus, updateComplaintStatusOpen } = require('../controllers/complaintController');
 const { submitFiles } = require('../controllers/submitFiles');
-const { getComplaints, getComplaintsByDateRange } = require('../controllers/ComplainStatus');
+const { getComplaints, getUsers, getComplaintsByDateRange } = require('../controllers/ComplainStatus');
 const { getComplaintReplies, submitComplaintReply } = require('../controllers/complaintReplyController');
 
 const router = express.Router();
@@ -45,7 +43,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post('/login', login);
-router.post('/addUser', addUser); 
 router.post('/property', authenticateToken, addProperty);
 router.post('/owner', authenticateToken, addOwner);
 router.post('/checkMobile', checkMobile);
@@ -71,11 +68,14 @@ router.post('/updatePropertyDetailsHouse', updatePropertyDetailsHouse);
 router.post('/updateSpecial', updateSpecialConsideration);
 router.post('/loginC', loginC);
 router.post('/signup', signup);
+router.post('/updateUserStatus', updateUserStatus);
+router.post('/getAllUsersWithRoles', getAllUsersWithRoles);
 router.post('/complaints', submitComplaint);
 router.post('/submitFiles', upload.fields([{ name: 'attachmentDoc', maxCount: 1 }, { name: 'userImage', maxCount: 1 }]), submitFiles);
 router.post('/complaintsstatus', updateComplaintStatus);
 router.post('/complaintsstatusopen', updateComplaintStatusOpen);
 router.post('/complain', getComplaints);
+router.post('/getUsers', getUsers);
 router.post('/complaintsreplies', getComplaintReplies);
 router.post('/complaintsreply', submitComplaintReply);
 router.post('/getComplaintsByDateRange', getComplaintsByDateRange);

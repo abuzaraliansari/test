@@ -25,6 +25,7 @@ const loginC = async (req, res) => {
     u.[PasswordHash],
     u.[CreatedBy],
     u.[CreatedDate],
+    u.[IsActive],
     u.[ModifiedBy],
     u.[ModifiedDate],
     po.[AdharNumber],
@@ -92,6 +93,7 @@ const loginC = async (req, res) => {
             emailID: user.EmailID,
             createdBy: user.CreatedBy,
             createdDate: user.CreatedDate,
+            isActive: user.IsActive,
             modifiedBy: user.ModifiedBy,
             modifiedDate: user.ModifiedDate,
             roles: roles,
@@ -147,7 +149,115 @@ const signup = async (req, res) => {
   }
 };
 
+const updateUserStatus = async (req, res) => {
+  const { mobileNo, isActive, modifiedBy } = req.body;
+
+  console.log("Received mobileNo:", mobileNo);
+  console.log("Received isActive:", isActive);
+  console.log("Received modifiedBy:", modifiedBy);
+
+  if (!mobileNo || isActive === undefined || !modifiedBy) {
+    return res.status(400).json({ success: false, message: "mobileNo, isActive, and modifiedBy must be provided" });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input("mobileNo", sql.NVarChar, mobileNo)
+      .input("isActive", sql.Bit, isActive)
+      .input("modifiedBy", sql.NVarChar, modifiedBy)
+      .input("dateModified", sql.DateTime, new Date())
+      .query(
+        `UPDATE Users
+         SET IsActive = @isActive,
+             ModifiedBy = @modifiedBy,
+             ModifiedDate = @dateModified
+         WHERE MobileNo = @mobileNo`
+      );
+
+    console.log("Update result:", result);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ success: false, message: "No user found with the provided mobile number" });
+    }
+
+    res.status(200).json({ success: true, message: "User status updated successfully" });
+  } catch (err) {
+    console.error("Error updating user status:", err.message);
+    res.status(500).json({ success: false, message: "Failed to update user status", error: err.message });
+  }
+};
+
+
+const getAllUsersWithRoles = async (req, res) => {
+  const { mobileNumber } = req.body; // Optional filter for mobileNumber
+
+  try {
+    const pool = await poolPromise;
+
+    // SQL query to fetch user data along with roles
+    const result = await pool.request()
+      .input("mobileNumber", sql.NVarChar, mobileNumber || null)
+      .query(`
+        SELECT 
+          u.[UserID],
+          u.[Username],
+          u.[MobileNo],
+          u.[EmailID],
+          u.[CreatedBy],
+          u.[CreatedDate],
+          u.[ModifiedBy],
+          u.[ModifiedDate],
+          u.[isAdmin],
+          u.[IsActive],
+          r.[RoleName]
+        FROM 
+          dbo.Users u
+        LEFT JOIN 
+          dbo.UserRoles ur ON u.UserID = ur.UserID
+        LEFT JOIN 
+          dbo.Roles r ON ur.RoleID = r.RoleID
+        ${mobileNumber ? "WHERE u.MobileNo = @mobileNumber" : ""}
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(204).json({ success: false, message: "No users found." });
+    }
+
+    // Group roles for each user
+    const users = result.recordset.reduce((acc, row) => {
+      const user = acc.find(u => u.UserID === row.UserID);
+      if (user) {
+        user.roles.push(row.RoleName);
+      } else {
+        acc.push({
+          userID: row.UserID,
+          username: row.Username,
+          mobileNumber: row.MobileNo,
+          emailID: row.EmailID,
+          createdBy: row.CreatedBy,
+          createdDate: row.CreatedDate,
+          modifiedBy: row.ModifiedBy,
+          modifiedDate: row.ModifiedDate,
+          isAdmin: row.isAdmin,
+          isActive: row.IsActive,
+          roles: row.RoleName ? [row.RoleName] : []
+        });
+      }
+      return acc;
+    }, []);
+
+    res.status(200).json({ success: true, users });
+  } catch (err) {
+    console.error("Error fetching users with roles:", err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch users", error: err.message });
+  }
+};
+
 module.exports = {
   loginC,
   signup,
+  updateUserStatus,
+  getAllUsersWithRoles,
 };

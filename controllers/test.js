@@ -112,6 +112,8 @@ const addOwnerProperty = async (req, res) => {
             .input('Colony', sql.NVarChar, propertyDetails.colony)
             .input('GalliNumber', sql.NVarChar, propertyDetails.galliNumber)
             .input('HouseNumber', sql.Int, parseInt(propertyDetails.houseNumber))
+            .input('PrePropertyNo', sql.NVarChar, propertyDetails.prePropertyNo) // Added PrePropertyNo
+            .input('RoadSize', sql.NVarChar, propertyDetails.RoadSize) // Added RoadSize
             .input('HouseType', sql.NVarChar, propertyDetails.HouseType)
             .input('OpenArea', sql.NVarChar, propertyDetails.OpenArea)
             .input('ConstructedArea', sql.NVarChar, propertyDetails.ConstructedArea)
@@ -120,9 +122,9 @@ const addOwnerProperty = async (req, res) => {
             .input('CreatedBy', sql.NVarChar, propertyDetails.CreatedBy)
             .input('IsActive', sql.Bit, 1)
             .query(`
-                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, ShopArea, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive)
+                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, ShopArea, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, PrePropertyNo, RoadSize, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive)
                 OUTPUT INSERTED.PropertyID
-                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @ShopArea, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive)
+                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @ShopArea, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @PrePropertyNo, @RoadSize, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive)
             `);
 
         const propertyID = propertyResult.recordset[0].PropertyID;
