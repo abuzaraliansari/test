@@ -28,6 +28,7 @@ const loginC = async (req, res) => {
     u.[IsActive],
     u.[ModifiedBy],
     u.[ModifiedDate],
+    po.[FirstName],
     po.[AdharNumber],
     p.[ZoneID],
     p.[Locality],

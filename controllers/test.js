@@ -7,6 +7,7 @@ const addOwnerProperty = async (req, res) => {
     if (!ownerDetails) {
         return res.status(400).json({ success: false, message: 'Owner details are required' });
     }
+
     let transaction;
     try {
         const pool = await poolPromise;
@@ -42,12 +43,21 @@ const addOwnerProperty = async (req, res) => {
 
         const ownerID = ownerResult.recordset[0].OwnerID;
 
-        // Insert user details into Users table
-        const password = ownerDetails.mobileNumber.slice(0, 4) + ownerDetails.AdharNumber.slice(-4);
+        // Generate password based on conditions
+        let password;
+        if (ownerDetails.AdharNumber && ownerDetails.AdharNumber.trim() !== '') {
+            password = ownerDetails.mobileNumber.slice(0, 4) + ownerDetails.AdharNumber.slice(-1);
+        } else {
+            let firstName = ownerDetails.firstName || '';
+            firstName = firstName.padEnd(4, 'z').slice(0, 4); // Ensure at least 4 characters, fill with 'z' if needed
+            password = ownerDetails.mobileNumber.slice(0, 4) + firstName;
+        }
+
         const passwordHash = await bcrypt.hash(password, 10);
 
-        await transaction.request()
-            .input('Username', sql.NVarChar, ownerDetails.firstName)
+        // Insert user details into Users table
+        const userResult = await transaction.request()
+            .input('Username', sql.NVarChar, ownerDetails.mobileNumber) // Username is set to mobileNumber
             .input('MobileNo', sql.NVarChar, ownerDetails.mobileNumber)
             .input('EmailID', sql.NVarChar, ownerDetails.Email)
             .input('password', sql.NVarChar, password)
@@ -66,11 +76,31 @@ const addOwnerProperty = async (req, res) => {
             .input('GeoLocation', sql.NVarChar, `${specialConsideration.latitude},${specialConsideration.longitude}`)
             .query(`
                 INSERT INTO Users (Username, MobileNo, EmailID, password, PasswordHash, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, isAdmin, IsActive, ZoneID, Locality, Colony, GalliNumber, HouseNumber, GeoLocation)
+                OUTPUT INSERTED.UserID
                 VALUES (@Username, @MobileNo, @EmailID, @password, @PasswordHash, @CreatedBy, @CreatedDate, @ModifiedBy, @ModifiedDate, @isAdmin, @IsActive, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @GeoLocation)
             `);
 
-        console.log(ownerID);
-        console.log(ownerResult);
+        // Check if userResult.recordset is empty
+        if (!userResult.recordset || userResult.recordset.length === 0) {
+            throw new Error('Failed to insert user into Users table');
+        }
+
+        const userID = userResult.recordset[0].UserID;
+
+        // Assign role to the user
+        await transaction.request()
+            .input('UserID', sql.Int, userID)
+            .input('RoleID', sql.Int, 2) // RoleID = 2
+            .input('CreatedBy', sql.NVarChar, ownerDetails.firstName)
+            .query(`
+                INSERT INTO UserRoles (UserID, RoleID, CreatedBy)
+                VALUES (@UserID, @RoleID, @CreatedBy)
+            `);
+
+        console.log(`User created with UserID: ${userID} and assigned RoleID: 2`);
+
+
+
 
         // Insert family members if provided
         if (familyMembers && familyMembers.length > 0) {
