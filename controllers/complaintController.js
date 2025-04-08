@@ -24,7 +24,7 @@ const submitComplaint = async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Insert the complaint into the Complaints table
+    // Insert the complaint into the Complaints table 
     const result = await pool
       .request()
       .input("description", sql.Text, description)
@@ -150,8 +150,89 @@ const updateComplaintStatusOpen = async (req, res) => {
   }
 };
 
+const submitReplyComment = async (req, res) => {
+  const {
+    complaintID,
+    commentDescription,
+    status,
+    createdBy,
+    modifiedBy,
+    isAdmin
+  } = req.body;
+
+  console.log("Received request body:", req.body);
+
+  // Validate required fields
+  if (!complaintID || !commentDescription || !createdBy) {
+    return res.status(400).json({
+      success: false,
+      message: "complaintID, commentDescription, and createdBy must be provided"
+    });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Insert the reply comment into the ReplyComments table
+    const result = await pool
+      .request()
+      .input("complaintID", sql.Int, complaintID)
+      .input("commentDescription", sql.VarChar, commentDescription)
+      .input("status", sql.VarChar, status || null)
+      .input("createdBy", sql.VarChar, createdBy)
+      .input("createdDate", sql.DateTime, new Date())
+      .input("modifiedBy", sql.VarChar, modifiedBy || null)
+      .input("modifiedDate", sql.DateTime, modifiedBy ? new Date() : null)
+      .input("isAdmin", sql.Bit, isAdmin || 0)
+      .query(`
+        INSERT INTO ReplyComments (
+          ComplaintID,
+          CommentDescription,
+          Status,
+          CreatedBy,
+          CreatedDate,
+          ModifiedBy,
+          ModifiedDate,
+          IsAdmin
+        )
+        OUTPUT INSERTED.ReplyCommentsID
+        VALUES (
+          @complaintID,
+          @commentDescription,
+          @status,
+          @createdBy,
+          @createdDate,
+          @modifiedBy,
+          @modifiedDate,
+          @isAdmin
+        )
+      `);
+
+    console.log("Insert result:", result);
+
+    if (result.recordset && result.recordset.length > 0) {
+      const replyCommentsID = result.recordset[0].ReplyCommentsID;
+      res.status(201).json({
+        success: true,
+        message: "Reply comment submitted successfully",
+        replyCommentsID
+      });
+    } else {
+      throw new Error("Failed to insert reply comment");
+    }
+  } catch (err) {
+    console.error("Error submitting reply comment:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to submit reply comment",
+      error: err.message
+    });
+  }
+};
+
 module.exports = {
   submitComplaint,
   updateComplaintStatus,
-  updateComplaintStatusOpen
+  updateComplaintStatusOpen,
+  submitReplyComment // Export the new API
 };
