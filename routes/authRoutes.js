@@ -24,7 +24,7 @@ const authenticateToken = require('../middlewares/authMiddleware');
 const { loginC, signup, updateUserStatus, getAllUsersWithRoles } = require('../controllers/authController');
 const { submitComplaint, updateComplaintStatus, updateComplaintStatusOpen, submitReplyComment } = require('../controllers/complaintController');
 const { submitFiles } = require('../controllers/submitFiles');
-const { getComplaints, getUsers, getComplaintsByDateRange } = require('../controllers/ComplainStatus');
+const { getComplaints, getUsers, getComplaintsByDateRange, getComplaintsLimit } = require('../controllers/ComplainStatus');
 const { getComplaintReplies, submitComplaintReply } = require('../controllers/complaintReplyController');
 
 const router = express.Router();
@@ -76,6 +76,7 @@ router.post('/complaintsstatus', updateComplaintStatus);
 router.post('/complaintsstatusopen', updateComplaintStatusOpen);
 router.post('/submitReplyComment', submitReplyComment);
 router.post('/complain', getComplaints);
+router.post('/complainlimit', getComplaintsLimit);
 router.post('/getUsers', getUsers);
 router.post('/complaintsreplies', getComplaintReplies);
 router.post('/complaintsreply', submitComplaintReply);
