@@ -256,9 +256,77 @@ const getAllUsersWithRoles = async (req, res) => {
   }
 };
 
+
+const getAllUsersWithRoleslimit = async (req, res) => {
+  const { mobileNumber, limit } = req.body; // Optional filter for mobileNumber and limit
+
+  try {
+    const pool = await poolPromise;
+
+    // SQL query to fetch user data along with roles
+    const result = await pool.request()
+      .input("mobileNumber", sql.NVarChar, mobileNumber || null)
+      .input("limit", sql.Int, limit || 10) // Default to 10 rows if limit is not provided
+      .query(`
+        SELECT TOP (@limit)
+          u.[UserID],
+          u.[Username],
+          u.[MobileNo],
+          u.[EmailID],
+          u.[CreatedBy],
+          u.[CreatedDate],
+          u.[ModifiedBy],
+          u.[ModifiedDate],
+          u.[isAdmin],
+          u.[IsActive],
+          r.[RoleName]
+        FROM 
+          dbo.Users u
+        LEFT JOIN 
+          dbo.UserRoles ur ON u.UserID = ur.UserID
+        LEFT JOIN 
+          dbo.Roles r ON ur.RoleID = r.RoleID
+        ${mobileNumber ? "WHERE u.MobileNo = @mobileNumber" : ""}
+        ORDER BY u.CreatedDate DESC
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(204).json({ success: false, message: "No users found." });
+    }
+
+    // Group roles for each user
+    const users = result.recordset.reduce((acc, row) => {
+      const user = acc.find(u => u.UserID === row.UserID);
+      if (user) {
+        user.roles.push(row.RoleName);
+      } else {
+        acc.push({
+          userID: row.UserID,
+          username: row.Username,
+          mobileNumber: row.MobileNo,
+          emailID: row.EmailID,
+          createdBy: row.CreatedBy,
+          createdDate: row.CreatedDate,
+          modifiedBy: row.ModifiedBy,
+          modifiedDate: row.ModifiedDate,
+          isAdmin: row.isAdmin,
+          isActive: row.IsActive,
+          roles: row.RoleName ? [row.RoleName] : []
+        });
+      }
+      return acc;
+    }, []);
+
+    res.status(200).json({ success: true, users });
+  } catch (err) {
+    console.error("Error fetching users with roles:", err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch users", error: err.message });
+  }
+};
 module.exports = {
   loginC,
   signup,
   updateUserStatus,
   getAllUsersWithRoles,
+  getAllUsersWithRoleslimit,
 };
