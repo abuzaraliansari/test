@@ -258,7 +258,7 @@ const getAllUsersWithRoles = async (req, res) => {
 
 
 const getAllUsersWithRoleslimit = async (req, res) => {
-  const { mobileNumber, limit } = req.body; // Optional filter for mobileNumber and limit
+  const { mobileNumber, limit, username } = req.body; // Optional filters for mobileNumber, limit, and username
 
   try {
     const pool = await poolPromise;
@@ -267,6 +267,7 @@ const getAllUsersWithRoleslimit = async (req, res) => {
     const result = await pool.request()
       .input("mobileNumber", sql.NVarChar, mobileNumber || null)
       .input("limit", sql.Int, limit || 10) // Default to 10 rows if limit is not provided
+      .input("username", sql.NVarChar, username ? `${username}%` : null) // Add LIKE filter for username
       .query(`
         SELECT TOP (@limit)
           u.[UserID],
@@ -286,7 +287,9 @@ const getAllUsersWithRoleslimit = async (req, res) => {
           dbo.UserRoles ur ON u.UserID = ur.UserID
         LEFT JOIN 
           dbo.Roles r ON ur.RoleID = r.RoleID
-        ${mobileNumber ? "WHERE u.MobileNo = @mobileNumber" : ""}
+        WHERE 
+          (@mobileNumber IS NULL OR u.MobileNo = @mobileNumber) AND
+          (@username IS NULL OR u.Username LIKE @username)
         ORDER BY u.CreatedDate DESC
       `);
 
