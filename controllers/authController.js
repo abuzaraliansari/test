@@ -263,7 +263,7 @@ const getAllUsersWithRoleslimit = async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // SQL query to fetch user data along with roles
+    // SQL query to fetch user data along with additional fields and joins
     const result = await pool.request()
       .input("mobileNumber", sql.NVarChar, mobileNumber || null)
       .input("limit", sql.Int, limit || 10) // Default to 10 rows if limit is not provided
@@ -274,15 +274,43 @@ const getAllUsersWithRoleslimit = async (req, res) => {
           u.[Username],
           u.[MobileNo],
           u.[EmailID],
+          u.[Password],
+          u.[PasswordHash],
           u.[CreatedBy],
           u.[CreatedDate],
+          u.[IsActive],
           u.[ModifiedBy],
           u.[ModifiedDate],
-          u.[isAdmin],
-          u.[IsActive],
+          po.[FirstName],
+          po.[MiddleName],
+          po.[LastName],
+          po.[AdharNumber],
+          p.[ZoneID],
+          p.[Locality],
+          p.[Colony],
+          p.[GalliNumber],
+          p.[HouseNumber],
+          sc.[GeoLocation],
+          c.[Colony] AS ColonyName,
+          l.[Locality] AS LocalityName,
+          l.[Zone] AS ZoneName,
           r.[RoleName]
         FROM 
           dbo.Users u
+        INNER JOIN 
+          dbo.PropertyOwner po ON u.MobileNo = po.MobileNumber 
+        LEFT JOIN 
+          dbo.Property p ON po.OwnerID = p.OwnerID
+        LEFT JOIN 
+          dbo.SpecialConsideration sc ON po.OwnerID = sc.OwnerID
+        LEFT JOIN 
+          dbo.FileMetadata fmtd ON po.OwnerID = fmtd.OwnerID
+        LEFT JOIN 
+          dbo.TenantDocuments td ON po.OwnerID = td.OwnerID
+        LEFT JOIN 
+          dbo.Colony c ON p.Colony = c.Colony
+        LEFT JOIN 
+          dbo.Locality l ON c.LocalityID = l.LocalityID
         LEFT JOIN 
           dbo.UserRoles ur ON u.UserID = ur.UserID
         LEFT JOIN 
@@ -308,12 +336,26 @@ const getAllUsersWithRoleslimit = async (req, res) => {
           username: row.Username,
           mobileNumber: row.MobileNo,
           emailID: row.EmailID,
+          password: row.Password,
+          passwordHash: row.PasswordHash,
           createdBy: row.CreatedBy,
           createdDate: row.CreatedDate,
+          isActive: row.IsActive,
           modifiedBy: row.ModifiedBy,
           modifiedDate: row.ModifiedDate,
-          isAdmin: row.isAdmin,
-          isActive: row.IsActive,
+          firstName: row.FirstName,
+          middleName: row.MiddleName,
+          lastName: row.LastName,
+          adharNumber: row.AdharNumber,
+          zoneID: row.ZoneID,
+          locality: row.Locality,
+          colony: row.Colony,
+          galliNumber: row.GalliNumber,
+          houseNumber: row.HouseNumber,
+          geoLocation: row.GeoLocation,
+          colonyName: row.ColonyName,
+          localityName: row.LocalityName,
+          zoneName: row.ZoneName,
           roles: row.RoleName ? [row.RoleName] : []
         });
       }
