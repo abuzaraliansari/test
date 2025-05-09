@@ -21,7 +21,7 @@ const { updatePropertyDetails } = require('../controllers/updatePropertyDetailsA
 const updatePropertyDetailsHouse = require('../controllers/updatePropertyDetailsHouseController');
 const { updateSpecialConsideration } = require('../controllers/updateSpecialConsiderationController');
 const authenticateToken = require('../middlewares/authMiddleware');
-const { loginC, signup, updateUserStatus, getAllUsersWithRoles, getAllUsersWithRoleslimit } = require('../controllers/authController');
+const { loginC, signup, updateUserStatus, getAllUsersWithRoles, getAllUsersWithRoleslimit, getTaxSurveyByUserId } = require('../controllers/authController');
 const { submitComplaint, updateComplaintStatus, updateComplaintStatusOpen, submitReplyComment } = require('../controllers/complaintController');
 const { submitFiles } = require('../controllers/submitFiles');
 const { getComplaints, getUsers, getComplaintsByDateRange, getComplaintsLimit } = require('../controllers/ComplainStatus');
@@ -71,6 +71,7 @@ router.post('/signup', signup);
 router.post('/updateUserStatus', updateUserStatus);
 router.post('/getAllUsersWithRoles', getAllUsersWithRoles);
 router.post('/getAllUsersWithRoleslimit', getAllUsersWithRoleslimit);
+router.post('/getTaxSurveyByUserId', getTaxSurveyByUserId);
 router.post('/complaints', submitComplaint);
 router.post('/submitFiles', upload.fields([{ name: 'attachmentDoc', maxCount: 1 }, { name: 'userImage', maxCount: 1 }]), submitFiles);
 router.post('/complaintsstatus', updateComplaintStatus);
