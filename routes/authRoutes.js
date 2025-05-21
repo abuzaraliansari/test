@@ -23,9 +23,10 @@ const { updateSpecialConsideration } = require('../controllers/updateSpecialCons
 const authenticateToken = require('../middlewares/authMiddleware');
 const { loginC, signup, updateUserStatus, getAllUsersWithRoles, getAllUsersWithRoleslimit, getTaxSurveyByUserId } = require('../controllers/authController');
 const { submitComplaint, updateComplaintStatus, updateComplaintStatusOpen, submitReplyComment } = require('../controllers/complaintController');
-const { submitFiles } = require('../controllers/submitFiles');
+const { submitFiles, getFiles } = require('../controllers/submitFiles');
 const { getComplaints, getUsers, getComplaintsByDateRange, getComplaintsLimit } = require('../controllers/ComplainStatus');
 const { getComplaintReplies, submitComplaintReply } = require('../controllers/complaintReplyController');
+const { sendSms, sendWhatsAppMessage, verifyOtp } = require('../controllers/smsController');
 
 const router = express.Router();
 
@@ -74,6 +75,7 @@ router.post('/getAllUsersWithRoleslimit', getAllUsersWithRoleslimit);
 router.post('/getTaxSurveyByUserId', getTaxSurveyByUserId);
 router.post('/complaints', submitComplaint);
 router.post('/submitFiles', upload.fields([{ name: 'attachmentDoc', maxCount: 1 }, { name: 'userImage', maxCount: 1 }]), submitFiles);
+router.get('/getFiles', getFiles);
 router.post('/complaintsstatus', updateComplaintStatus);
 router.post('/complaintsstatusopen', updateComplaintStatusOpen);
 router.post('/submitReplyComment', submitReplyComment);
@@ -83,5 +85,8 @@ router.post('/getUsers', getUsers);
 router.post('/complaintsreplies', getComplaintReplies);
 router.post('/complaintsreply', submitComplaintReply);
 router.post('/getComplaintsByDateRange', getComplaintsByDateRange);
+router.post('/sendSms', sendSms);
+router.post('/sendWhatsAppMessage', sendWhatsAppMessage);
+router.post('/verifyOtp', verifyOtp);
 
 module.exports = router;
