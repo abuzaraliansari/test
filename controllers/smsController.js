@@ -3,7 +3,7 @@ const { sql, poolPromise } = require('../config/db');
 
 // Twilio credentials
 const accountSid = 'AC9f09ddc35a39ceea3c7c3e36be7cae19';
-const authToken = 'd1eacd228e1ca1eba74f7f71541f361e';
+const authToken = '7fec610408c69f694060a172d857e0fd';
 const client = twilio(accountSid, authToken);
 
 // Generate a 6-digit OTP
