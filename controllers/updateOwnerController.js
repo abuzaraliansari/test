@@ -17,6 +17,7 @@ const updateOwner = async (req, res) => {
       Income,
       Religion,
       Category,
+      Cast, // <-- new column
       AdharNumber,
       PanNumber,
       Email,
@@ -43,6 +44,7 @@ const updateOwner = async (req, res) => {
       .input('Income', sql.NVarChar, Income)
       .input('Religion', sql.NVarChar, Religion)
       .input('Category', sql.NVarChar, Category)
+      .input('Cast', sql.NVarChar, Cast) // <-- new input
       .input('AdharNumber', sql.NVarChar, AdharNumber)
       .input('PanNumber', sql.NVarChar, PanNumber)
       .input('Email', sql.NVarChar, Email)
@@ -64,6 +66,7 @@ const updateOwner = async (req, res) => {
           Income = @Income,
           Religion = @Religion,
           Category = @Category,
+          Cast = @Cast, -- <-- new column
           AdharNumber = @AdharNumber,
           PanNumber = @PanNumber,
           Email = @Email,
@@ -72,7 +75,7 @@ const updateOwner = async (req, res) => {
           DateModified = @DateModified
         WHERE OwnerID = @OwnerID
       `);
-console.log('Owner details updated successfully.', response.message);
+    console.log('Owner details updated successfully.', response?.message);
     res.status(200).json({ success: true, message: 'Owner details updated successfully.' });
   } catch (error) {
     console.error(error);

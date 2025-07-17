@@ -65,8 +65,8 @@ const GetOwnerDetails = async (req, res) => {
       return res.status(204).json({ success: false, message: "Owner not found." });
     }
 
-    console.log(ownerResult.recordset[0]);
-    const OwnerID = ownerResult.recordset[0].OwnerID;
+    const ownerData = ownerResult.recordset[0];
+    const OwnerID = ownerData.OwnerID;
 
     // Step 2: Fetch related data from other tables
     const [familyMembers, properties, considerations, files, TenantDocuments] = await Promise.all([
@@ -98,37 +98,40 @@ const GetOwnerDetails = async (req, res) => {
         .input("OwnerID", sql.Int, OwnerID)
         .query(`
           SELECT 
-            [PropertyID],
-            [OwnerID],
-            [PropertyMode],
-            [PropertyAge],
-            [RoomCount],
-            [FloorCount],
-            [ShopCount],
-            [ShopArea],
-            [TenantCount],
-            [TenantYearlyRent],
-            [WaterHarvesting],
-            [Submersible],
-            [ZoneID],
-            [Locality],
-            [Colony],
-            [GalliNumber],
-            [HouseNumber],
-            [HouseType],
-            [OpenArea],
-            [ConstructedArea],
-            [BankAccountNumber],
-            [Consent],
-            [CreatedBy],
-            [DateCreated],
-            [ModifiedBy],
-            [DateModified],
-            [IsActive]
+            p.[PropertyID],
+            p.[OwnerID],
+            p.[PropertyMode],
+            p.[PropertyAge],
+            p.[RoomCount],
+            p.[FloorCount],
+            p.[ShopCount],
+            p.[ShopArea],
+            p.[TenantCount],
+            p.[TenantYearlyRent],
+            p.[WaterHarvesting],
+            p.[Submersible],
+            p.[ZoneID],
+            p.[Locality],
+            p.[Colony],
+            p.[GalliNumber],
+            p.[HouseNumber],
+            p.[HouseType],
+            p.[OpenArea],
+            p.[ConstructedArea],
+            p.[BankAccountNumber],
+            p.[Consent],
+            p.[CreatedBy],
+            p.[DateCreated],
+            p.[ModifiedBy],
+            p.[DateModified],
+            p.[IsActive],
+            l.[Zone] AS ZoneName,
+            l.[Locality] AS LocalityName
           FROM 
-            [dbo].[Property]
+            [dbo].[Property] p
+          LEFT JOIN [dbo].[Locality] l ON p.ZoneID = l.ZoneID AND p.Locality = l.LocalityID
           WHERE 
-            OwnerID = @OwnerID 
+            p.OwnerID = @OwnerID 
         `),
       pool.request()
         .input("OwnerID", sql.Int, OwnerID)
@@ -196,10 +199,11 @@ const GetOwnerDetails = async (req, res) => {
     ]);
 
     // Step 3: Combine data and send the response
+    // zoneName and localityName are now per-property, not top-level
     res.status(200).json({
-      owner: ownerResult.recordset[0],
+      owner: ownerData,
       familyMembers: familyMembers.recordset,
-      properties: properties.recordset,
+      properties: properties.recordset, // Each property includes ZoneName and LocalityName
       considerations: considerations.recordset,
       files: files.recordset,
       TenantDocuments: TenantDocuments.recordset
