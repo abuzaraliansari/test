@@ -32,7 +32,7 @@ const addOwnerProperty = async (req, res) => {
             .input('AdharNumber', sql.NVarChar, ownerDetails.AdharNumber)
             .input('PanNumber', sql.NVarChar, ownerDetails.PanNumber)
             .input('Email', sql.NVarChar, ownerDetails.Email)
-            .input('NumberOfMembers', sql.Int, parseInt(ownerDetails.NumberOfMembers))
+            .input('NumberOfMembers', sql.Int, parseInt(ownerDetails.NumberOfMembers) || 0)
             .input('CreatedBy', sql.NVarChar, ownerDetails.CreatedBy)
             .input('IsActive', sql.Bit, 1)
             .query(`
@@ -49,15 +49,51 @@ const addOwnerProperty = async (req, res) => {
             password = ownerDetails.mobileNumber.slice(0, 4) + ownerDetails.AdharNumber.slice(-1);
         } else {
             let firstName = ownerDetails.firstName || '';
-            firstName = firstName.padEnd(4, 'z').slice(0, 4); // Ensure at least 4 characters, fill with 'z' if needed
+            firstName = firstName.padEnd(4, 'z').slice(0, 4);
             password = ownerDetails.mobileNumber.slice(0, 4) + firstName;
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
 
+        // Insert property details
+        const propertyResult = await transaction.request()
+            .input('ownerID', sql.Int, ownerID)
+            .input('PropertyMode', sql.NVarChar, propertyDetails.propertyMode)
+            .input('PropertyAge', sql.NVarChar, propertyDetails.propertyAge)
+            .input('RoomCount', sql.Int, parseInt(propertyDetails.roomCount) || 0)
+            .input('FloorCount', sql.Int, parseInt(propertyDetails.floorCount) || 0)
+            .input('ShopCount', sql.Int, parseInt(propertyDetails.shopCount) || 0)
+            .input('ShopArea', sql.NVarChar, propertyDetails.ShopArea)
+            .input('TenantCount', sql.Int, parseInt(propertyDetails.tenantCount) || 0)
+            .input('TenantYearlyRent', sql.Int, parseInt(propertyDetails.TenantYearlyRent) || 0)
+            .input('WaterHarvesting', sql.Bit, propertyDetails.waterHarvesting === 'Yes' ? 1 : 0)
+            .input('Submersible', sql.Bit, propertyDetails.submersible === 'Yes' ? 1 : 0)
+            .input('ZoneID', sql.Int, parseInt(propertyDetails.zone))
+            .input('Locality', sql.Int, parseInt(propertyDetails.locality))
+            .input('Colony', sql.NVarChar, propertyDetails.colony)
+            .input('GalliNumber', sql.NVarChar, propertyDetails.galliNumber)
+            .input('HouseNumber', sql.NVarChar, propertyDetails.houseNumber) // Changed to NVarChar as per table definition
+            .input('PrePropertyNo', sql.NVarChar, propertyDetails.prePropertyNo)
+            .input('RoadSize', sql.NVarChar, propertyDetails.RoadSize)
+            .input('HouseType', sql.NVarChar, propertyDetails.HouseType)
+            .input('OpenArea', sql.NVarChar, propertyDetails.OpenArea)
+            .input('ConstructedArea', sql.NVarChar, propertyDetails.ConstructedArea)
+            .input('BankAccountNumber', sql.VarChar, propertyDetails.bankAccountNumber)
+            .input('Consent', sql.Bit, propertyDetails.consent === 'Yes' ? 1 : 0)
+            .input('CreatedBy', sql.NVarChar, propertyDetails.CreatedBy)
+            .input('GeoLocation', sql.NVarChar, propertyDetails.GeoLocation)
+            .input('IsActive', sql.Bit, 1)
+            .query(`
+                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, ShopArea, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, PrePropertyNo, RoadSize, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive, GeoLocation)
+                OUTPUT INSERTED.PropertyID
+                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @ShopArea, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @PrePropertyNo, @RoadSize, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive, @GeoLocation)
+            `);
+
+        const propertyID = propertyResult.recordset[0].PropertyID;
+
         // Insert user details into Users table
         const userResult = await transaction.request()
-            .input('Username', sql.NVarChar, ownerDetails.mobileNumber) // Username is set to mobileNumber
+            .input('Username', sql.NVarChar, ownerDetails.mobileNumber)
             .input('MobileNo', sql.NVarChar, ownerDetails.mobileNumber)
             .input('EmailID', sql.NVarChar, ownerDetails.Email)
             .input('password', sql.NVarChar, password)
@@ -72,15 +108,13 @@ const addOwnerProperty = async (req, res) => {
             .input('Locality', sql.Int, parseInt(propertyDetails.locality))
             .input('Colony', sql.NVarChar, propertyDetails.colony)
             .input('GalliNumber', sql.NVarChar, propertyDetails.galliNumber)
-            .input('HouseNumber', sql.Int, parseInt(propertyDetails.houseNumber))
-            .input('GeoLocation', sql.NVarChar, `${specialConsideration.latitude},${specialConsideration.longitude}`)
+            .input('HouseNumber', sql.NVarChar, propertyDetails.houseNumber)
             .query(`
-                INSERT INTO Users (Username, MobileNo, EmailID, password, PasswordHash, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, isAdmin, IsActive, ZoneID, Locality, Colony, GalliNumber, HouseNumber, GeoLocation)
+                INSERT INTO Users (Username, MobileNo, EmailID, password, PasswordHash, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, isAdmin, IsActive, ZoneID, Locality, Colony, GalliNumber, HouseNumber)
                 OUTPUT INSERTED.UserID
-                VALUES (@Username, @MobileNo, @EmailID, @password, @PasswordHash, @CreatedBy, @CreatedDate, @ModifiedBy, @ModifiedDate, @isAdmin, @IsActive, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @GeoLocation)
+                VALUES (@Username, @MobileNo, @EmailID, @password, @PasswordHash, @CreatedBy, @CreatedDate, @ModifiedBy, @ModifiedDate, @isAdmin, @IsActive, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber)
             `);
 
-        // Check if userResult.recordset is empty
         if (!userResult.recordset || userResult.recordset.length === 0) {
             throw new Error('Failed to insert user into Users table');
         }
@@ -90,17 +124,12 @@ const addOwnerProperty = async (req, res) => {
         // Assign role to the user
         await transaction.request()
             .input('UserID', sql.Int, userID)
-            .input('RoleID', sql.Int, 2) // RoleID = 2
+            .input('RoleID', sql.Int, 2)
             .input('CreatedBy', sql.NVarChar, ownerDetails.firstName)
             .query(`
                 INSERT INTO UserRoles (UserID, RoleID, CreatedBy)
                 VALUES (@UserID, @RoleID, @CreatedBy)
             `);
-
-        console.log(`User created with UserID: ${userID} and assigned RoleID: 2`);
-
-
-
 
         // Insert family members if provided
         if (familyMembers && familyMembers.length > 0) {
@@ -124,41 +153,6 @@ const addOwnerProperty = async (req, res) => {
             }
         }
 
-        // Insert property details
-        const propertyResult = await transaction.request()
-            .input('ownerID', sql.Int, ownerID)
-            .input('PropertyMode', sql.NVarChar, propertyDetails.propertyMode)
-            .input('PropertyAge', sql.NVarChar, propertyDetails.propertyAge)
-            .input('RoomCount', sql.Int, parseInt(propertyDetails.roomCount))
-            .input('FloorCount', sql.Int, parseInt(propertyDetails.floorCount))
-            .input('ShopCount', sql.Int, parseInt(propertyDetails.shopCount))
-            .input('ShopArea', sql.NVarChar, propertyDetails.ShopArea)
-            .input('TenantCount', sql.Int, parseInt(propertyDetails.tenantCount))
-            .input('TenantYearlyRent', sql.Int, parseInt(propertyDetails.TenantYearlyRent))
-            .input('WaterHarvesting', sql.Bit, propertyDetails.waterHarvesting === 'Yes' ? 1 : 0)
-            .input('Submersible', sql.Bit, propertyDetails.submersible === 'Yes' ? 1 : 0)
-            .input('ZoneID', sql.Int, parseInt(propertyDetails.zone))
-            .input('Locality', sql.Int, parseInt(propertyDetails.locality))
-            .input('Colony', sql.NVarChar, propertyDetails.colony)
-            .input('GalliNumber', sql.NVarChar, propertyDetails.galliNumber)
-            .input('HouseNumber', sql.Int, parseInt(propertyDetails.houseNumber))
-            .input('PrePropertyNo', sql.NVarChar, propertyDetails.prePropertyNo) // Added PrePropertyNo
-            .input('RoadSize', sql.NVarChar, propertyDetails.RoadSize) // Added RoadSize
-            .input('HouseType', sql.NVarChar, propertyDetails.HouseType)
-            .input('OpenArea', sql.NVarChar, propertyDetails.OpenArea)
-            .input('ConstructedArea', sql.NVarChar, propertyDetails.ConstructedArea)
-            .input('BankAccountNumber', sql.VarChar, propertyDetails.bankAccountNumber)
-            .input('Consent', sql.Bit, propertyDetails.consent === 'Yes' ? 1 : 0)
-            .input('CreatedBy', sql.NVarChar, propertyDetails.CreatedBy)
-            .input('IsActive', sql.Bit, 1)
-            .query(`
-                INSERT INTO Property (OwnerID, PropertyMode, PropertyAge, RoomCount, FloorCount, ShopCount, ShopArea, TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber, HouseNumber, PrePropertyNo, RoadSize, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive)
-                OUTPUT INSERTED.PropertyID
-                VALUES (@ownerID, @PropertyMode, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @ShopArea, @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber, @HouseNumber, @PrePropertyNo, @RoadSize, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive)
-            `);
-
-        const propertyID = propertyResult.recordset[0].PropertyID;
-
         // Insert special consideration details
         if (specialConsideration) {
             await transaction.request()
@@ -166,12 +160,11 @@ const addOwnerProperty = async (req, res) => {
                 .input('propertyID', sql.Int, propertyID)
                 .input('ConsiderationType', sql.NVarChar, specialConsideration.considerationType)
                 .input('Description', sql.NVarChar, specialConsideration.description)
-                .input('GeoLocation', sql.NVarChar, `${specialConsideration.latitude},${specialConsideration.longitude}`)
                 .input('CreatedBy', sql.NVarChar, specialConsideration.CreatedBy)
                 .input('IsActive', sql.Bit, 1)
                 .query(`
-                    INSERT INTO SpecialConsideration (OwnerID, PropertyID, ConsiderationType, Description, GeoLocation, CreatedBy, IsActive)
-                    VALUES (@ownerID, @propertyID, @ConsiderationType, @Description, @GeoLocation, @CreatedBy, @IsActive)
+                    INSERT INTO SpecialConsideration (OwnerID, PropertyID, ConsiderationType, Description, CreatedBy, IsActive)
+                    VALUES (@ownerID, @propertyID, @ConsiderationType, @Description, @CreatedBy, @IsActive)
                 `);
         }
 

@@ -3,7 +3,8 @@ const { sql, poolPromise } = require('../config/db');
 // Controller for adding a property
 const addPropertyDetails = async (req, res) => {
     try {
-        console.log(req.body);
+         console.log("addPropertyDetails API called");
+        console.log("Request body:", req.body);
         const { propertyDetails } = req.body; // propertyDetails from UI
 
         const pool = await poolPromise;
@@ -33,21 +34,23 @@ const addPropertyDetails = async (req, res) => {
             .input('Consent', sql.Bit, propertyDetails.consent)
             .input('CreatedBy', sql.NVarChar(50), propertyDetails.CreatedBy)
             .input('IsActive', sql.Bit, propertyDetails.IsActive == null ? 1 : propertyDetails.IsActive)
+            .input('GeoLocation', sql.NVarChar(100), propertyDetails.GeoLocation || null) // <-- Add this line
             .query(`
                 INSERT INTO Property (
                     OwnerID, PropertyMode, PrePropertyNo, PropertyAge, RoomCount, FloorCount, ShopCount, ShopArea,
                     TenantCount, TenantYearlyRent, WaterHarvesting, Submersible, ZoneID, Locality, Colony, GalliNumber,
-                    HouseNumber, RoadSize, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive
+                    HouseNumber, RoadSize, HouseType, OpenArea, ConstructedArea, BankAccountNumber, Consent, CreatedBy, IsActive, GeoLocation
                 )
                 OUTPUT INSERTED.PropertyID
                 VALUES (
                     @OwnerID, @PropertyMode, @PrePropertyNo, @PropertyAge, @RoomCount, @FloorCount, @ShopCount, @ShopArea,
                     @TenantCount, @TenantYearlyRent, @WaterHarvesting, @Submersible, @ZoneID, @Locality, @Colony, @GalliNumber,
-                    @HouseNumber, @RoadSize, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive
+                    @HouseNumber, @RoadSize, @HouseType, @OpenArea, @ConstructedArea, @BankAccountNumber, @Consent, @CreatedBy, @IsActive, @GeoLocation
                 )
             `);
 
-        const insertedPropertyID = result.recordset[0].PropertyID;
+         const insertedPropertyID = result.recordset[0].PropertyID;
+        console.log("PropertyDetails added successfully. PropertyID:", insertedPropertyID);
 
         res.status(201).json({
             success: true,
@@ -56,7 +59,7 @@ const addPropertyDetails = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("Error in addPropertyDetails:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 };
