@@ -52,7 +52,8 @@ const GetOwnerDetails = async (req, res) => {
           u.[Colony],
           u.[GalliNumber],
           u.[HouseNumber],
-          u.[GeoLocation]
+          -- Get GeoLocation from the first property (for backward compatibility)
+          (SELECT TOP 1 GeoLocation FROM [dbo].[Property] WHERE OwnerID = po.OwnerID) AS GeoLocation
         FROM 
           [dbo].[PropertyOwner] po
         LEFT JOIN 
@@ -101,6 +102,7 @@ const GetOwnerDetails = async (req, res) => {
             p.[PropertyID],
             p.[OwnerID],
             p.[PropertyMode],
+            p.[PrePropertyNo],
             p.[PropertyAge],
             p.[RoomCount],
             p.[FloorCount],
@@ -115,6 +117,7 @@ const GetOwnerDetails = async (req, res) => {
             p.[Colony],
             p.[GalliNumber],
             p.[HouseNumber],
+            p.[RoadSize],
             p.[HouseType],
             p.[OpenArea],
             p.[ConstructedArea],
@@ -125,6 +128,7 @@ const GetOwnerDetails = async (req, res) => {
             p.[ModifiedBy],
             p.[DateModified],
             p.[IsActive],
+            p.[GeoLocation],
             l.[Zone] AS ZoneName,
             l.[Locality] AS LocalityName
           FROM 
@@ -143,7 +147,6 @@ const GetOwnerDetails = async (req, res) => {
             [ConsiderationType],
             [Description],
             [CreatedBy],
-            [GeoLocation],
             [DateCreated],
             [ModifiedBy],
             [DateModified],
@@ -199,11 +202,10 @@ const GetOwnerDetails = async (req, res) => {
     ]);
 
     // Step 3: Combine data and send the response
-    // zoneName and localityName are now per-property, not top-level
     res.status(200).json({
       owner: ownerData,
       familyMembers: familyMembers.recordset,
-      properties: properties.recordset, // Each property includes ZoneName and LocalityName
+      properties: properties.recordset, // Each property now includes GeoLocation
       considerations: considerations.recordset,
       files: files.recordset,
       TenantDocuments: TenantDocuments.recordset

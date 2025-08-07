@@ -5,12 +5,16 @@ const bcrypt = require('bcryptjs');
 require("dotenv").config();
 
 
-
 const loginC = async (req, res) => {
+  console.log("🔐 loginC controller called");
+
   const { username, mobileNumber, password } = req.body;
+  console.log("📥 Request body:", { username, mobileNumber });
 
   try {
     const pool = await poolPromise;
+    console.log("✅ DB pool acquired");
+
     const result = await pool
       .request()
       .input("username", sql.NVarChar, username || null)
@@ -18,27 +22,27 @@ const loginC = async (req, res) => {
       .query(`
         SELECT 
           u.[UserID],
-    u.[Username],
-    u.[MobileNo],
-    u.[EmailID],
-    u.[Password],
-    u.[PasswordHash],
-    u.[CreatedBy],
-    u.[CreatedDate],
-    u.[IsActive],
-    u.[ModifiedBy],
-    u.[ModifiedDate],
-    po.[FirstName],
-    po.[AdharNumber],
-    p.[ZoneID],
-    p.[Locality],
-    p.[Colony],
-    p.[GalliNumber],
-    p.[HouseNumber],
-    sc.[GeoLocation],
-    c.[Colony] AS ColonyName,
-    l.[Locality] AS LocalityName,
-    l.[Zone] AS ZoneName
+          u.[Username],
+          u.[MobileNo],
+          u.[EmailID],
+          u.[Password],
+          u.[PasswordHash],
+          u.[CreatedBy],
+          u.[CreatedDate],
+          u.[IsActive],
+          u.[ModifiedBy],
+          u.[ModifiedDate],
+          po.[FirstName],
+          po.[AdharNumber],
+          p.[ZoneID],
+          p.[Locality],
+          p.[Colony],
+          p.[GalliNumber],
+          p.[HouseNumber],
+          p.[GeoLocation],
+          c.[Colony] AS ColonyName,
+          l.[Locality] AS LocalityName,
+          l.[Zone] AS ZoneName
         FROM 
           dbo.Users u
         INNER JOIN 
@@ -59,12 +63,15 @@ const loginC = async (req, res) => {
           (u.Username = @username OR u.MobileNo = @mobileNumber)
       `);
 
+    console.log("📊 User query result:", result.recordset);
+
     if (result.recordset.length > 0) {
       const user = result.recordset[0];
+
       const validPassword = await bcrypt.compare(password, user.PasswordHash);
+      console.log("🔍 Password check:", validPassword);
 
       if (validPassword) {
-        // Fetch user roles
         const rolesResult = await pool
           .request()
           .input("userID", sql.Int, user.UserID)
@@ -76,6 +83,7 @@ const loginC = async (req, res) => {
           `);
 
         const roles = rolesResult.recordset.map(role => role.RoleName);
+        console.log("👥 User roles fetched:", roles);
 
         const token = jwt.sign(
           { userId: user.UserID, username: user.Username, roles: roles },
@@ -83,10 +91,12 @@ const loginC = async (req, res) => {
           { expiresIn: "1h" }
         );
 
-        res.status(200).json({
+        console.log("✅ Login successful for:", user.Username);
+
+        return res.status(200).json({
           success: true,
           message: "Login successful",
-          token: token,
+          token,
           user: {
             userID: user.UserID,
             username: user.Username,
@@ -97,7 +107,7 @@ const loginC = async (req, res) => {
             isActive: user.IsActive,
             modifiedBy: user.ModifiedBy,
             modifiedDate: user.ModifiedDate,
-            roles: roles,
+            roles,
             firstName: user.FirstName,
             adharNumber: user.AdharNumber,
             zoneID: user.ZoneID,
@@ -111,19 +121,20 @@ const loginC = async (req, res) => {
             zoneName: user.ZoneName
           }
         });
-        console.log("User ID:", user.UserID);
-        console.log("Roles:", roles);
-        console.log(user);
       } else {
-        res.status(401).json({ success: false, message: "Invalid password" });
+        console.warn("❌ Invalid password for user:", user.Username);
+        return res.status(401).json({ success: false, message: "Invalid password" });
       }
     } else {
-      res.status(401).json({ success: false, message: "Invalid username or mobile number" });
+      console.warn("❌ User not found with username/mobile:", username || mobileNumber);
+      return res.status(401).json({ success: false, message: "Invalid username or mobile number" });
     }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("🔥 Error in loginC:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
+
 
 
 
@@ -311,7 +322,7 @@ const getAllUsersWithRoleslimit = async (req, res) => {
         p.[Colony],
         p.[GalliNumber],
         p.[HouseNumber],
-        sc.[GeoLocation],
+        p.[GeoLocation],
         r.[RoleName]
       FROM 
         dbo.Users u
